@@ -1,0 +1,117 @@
+﻿@using AlienFruit.Astra.Core
+@using AlienFruit.Astra.Models
+@using System.Reflection
+@inject AstraEngine AstraEngine
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - AlienFruit.Astra.Demo</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/AlienFruit.Astra.Demo.styles.css" asp-append-version="true" />
+    @AstraEngine.RenderHeaders()
+    <script>
+        function onStartLoading(){
+            document.getElementById('loading-icon').style.visibility = 'visible';
+        }
+
+        function onFinishLoading(){
+            document.getElementById('loading-icon').style.visibility = 'hidden';
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                @* <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <img src="~/logo.webp" alt="AlienFruit.Astra.Demo" />
+                </a> *@
+                <view-box-link id="brand-link"
+                    default-class-name="navbar-brand"
+                    view-box-id="main-view-box1"
+                    uri="/Home"><img src="~/logo.webp" alt="AlienFruit.Astra.Demo" /></view-box-link>
+                <img id="loading-icon" src="~/loading-icon.svg" alt="Loading..." />
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between" id="navbarSupportedContent">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <view-box-link id="home-link1"
+                                selected-class-name="nav-link text-dark active"
+                                default-class-name="nav-link"
+                                view-box-id="main-view-box1"
+                                uri="/Home">Home</view-box-link>
+                        </li>
+                        <li class="nav-item">
+                            <view-box-link id="privacy-link1" 
+                                selected-class-name="nav-link text-dark active" 
+                                default-class-name="nav-link"
+                                view-box-id="main-view-box1"
+                                uri="/Home/Privacy">Privacy</view-box-link>
+                        </li>
+                        <li class="nav-item">
+                            <view-box-link id="long-loading-link1" 
+                                selected-class-name="nav-link text-dark active" 
+                                default-class-name="nav-link"
+                                view-box-id="main-view-box1"
+                                uri="/Home/LongLoading">Long loading test</view-box-link>
+                        </li>
+                        <li class="nav-item">
+                            <view-box-link id="dynamic-content-link1" 
+                                selected-class-name="nav-link text-dark active" 
+                                default-class-name="nav-link"
+                                view-box-id="main-view-box1"
+                                uri="/DynamicContent">Dynamic Content</view-box-link>
+                        </li>
+                        <li class="nav-item">
+                            <view-box-link id="javascript-test-link1" 
+                                selected-class-name="nav-link text-dark active" 
+                                default-class-name="nav-link"
+                                view-box-id="main-view-box1"
+                                uri="/JavaScriptTest">JS loading test1</view-box-link>
+                        </li>
+                        <li class="nav-item">
+                            <view-box-link id="fire-animation-link1" 
+                                selected-class-name="nav-link text-dark active" 
+                                default-class-name="nav-link"
+                                view-box-id="main-view-box1"
+                                uri="/JavaScriptTest/FireAnimation">JS loading test2</view-box-link>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            <view-box id="main-view-box1" class="pb-3" role="main"
+                on-start-loading-js-function="onStartLoading"
+                on-finish-loading-js-function="onFinishLoading"     
+                connection-error-message-resource=@(new EmbeddedResource(
+                    name: "ViewBoxError.html", 
+                    path: "AlienFruit.Astra.Demo.Views.Shared.ViewBoxError.html", 
+                    assembly: Assembly.GetExecutingAssembly()))>
+                @* or use inmemory resource *@
+                @* connection-error-message-resource="@(new InMemoryResource("connection-error", "Не удалось подключиться к серверу."))"> *@
+                @RenderBody()
+            </view-box>
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2025 - AlienFruit.Astra.Demo - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

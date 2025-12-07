@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Views\Shared\ViewBoxError.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AlienFruit.Astra\AlienFruit.Astra.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Views\Shared\ViewBoxError.html" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,55 @@
+@using AlienFruit.Astra.Core
+@using AlienFruit.Astra.Models
+@using System.Reflection
+@inject AstraEngine AstraEngine
+
+@{
+    ViewData["Title"] = "Dynamic Content";
+}
+
+<div class="text-center mb-4">
+    <h1 class="display-4">Dynamic Content Example</h1>
+    <p class="lead">Нажмите на кнопки ниже, чтобы динамически загрузить различный контент без изменения адреса в браузере.</p>
+</div>
+
+<div class="d-flex justify-content-center gap-2 mb-4">
+    <view-box-link id="dynamic-tab1-link"
+        default-class-name="btn btn-primary"
+        selected-class-name="btn btn-primary active"
+        view-box-id="dynamic-content-box"
+        uri="/DynamicContent/Tab1">
+        Tab 1
+    </view-box-link>
+    
+    <view-box-link id="dynamic-tab2-link"
+        default-class-name="btn btn-primary"
+        selected-class-name="btn btn-primary active"
+        view-box-id="dynamic-content-box"
+        uri="/DynamicContent/Tab2">
+        Tab 2
+    </view-box-link>
+    
+    <view-box-link id="dynamic-tab3-link"
+        default-class-name="btn btn-primary"
+        selected-class-name="btn btn-primary active"
+        view-box-id="dynamic-content-box"
+        uri="/DynamicContent/Tab3">
+        Tab 3
+    </view-box-link>
+</div>
+
+<view-box id="dynamic-content-box" 
+    class="pb-3" 
+    role="main"
+    changing-browser-address-enable="false"
+    on-start-loading-js-function="onStartLoading"
+    on-finish-loading-js-function="onFinishLoading"
+    connection-error-message-resource=@(new EmbeddedResource(
+        name: "ViewBoxError.html", 
+        path: "AlienFruit.Astra.Demo.Views.Shared.ViewBoxError.html", 
+        assembly: Assembly.GetExecutingAssembly()))>
+    <div class="alert alert-info">
+        <h4>Выберите вкладку выше, чтобы загрузить контент</h4>
+    </div>
+</view-box>
+

@@ -1,0 +1,220 @@
+@using AlienFruit.Astra.Core
+@using AlienFruit.Astra.Models
+@using System.Reflection
+@inject AstraEngine AstraEngine
+
+@{
+    ViewData["Title"] = "JavaScript Test";
+}
+
+<div class="text-center mb-4">
+    <h1 class="display-4">JavaScript Dynamic Loading Test</h1>
+    <p class="lead">Эта страница демонстрирует динамическую загрузку JavaScript через view-box.</p>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h3 class="mb-0">Интерактивная анимация частиц</h3>
+    </div>
+    <div class="card-body">
+        <p>Нажмите на canvas ниже, чтобы создать частицы. JavaScript загружается динамически при загрузке этой страницы.</p>
+        <canvas id="particleCanvas" width="800" height="400" style="border: 2px solid #007bff; border-radius: 8px; cursor: crosshair; width: 100%; max-width: 800px; height: auto;"></canvas>
+        <div class="mt-3">
+            <button id="clearBtn" class="btn btn-secondary">Очистить</button>
+            <span class="ms-3">Частиц на экране: <strong id="particleCount">0</strong></span>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h3 class="mb-0">Информация о загрузке</h3>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-success">
+            <strong>Успешно!</strong> JavaScript был загружен динамически через view-box и выполнен на этой странице.
+        </div>
+        <p>Этот JavaScript код загружается из тега <code>&lt;script&gt;</code> и выполняется только после того, как контент был загружен в view-box. 
+           Это демонстрирует возможность динамической загрузки и выполнения скриптов из тега <code>&lt;script&gt;</code>.</p>
+    </div>
+</div>
+
+<script>
+    (function() {
+        console.log('JavaScript загружен и выполнен динамически!');
+            
+        const canvas = document.getElementById('particleCanvas');
+        if (!canvas) return;
+            
+        const ctx = canvas.getContext('2d');
+        const particles = [];
+        let animationId;
+        let resizeHandler = null;
+        let clickHandler = null;
+        let mousemoveHandler = null;
+        let clearBtnHandler = null;
+            
+        // Функция очистки всех ресурсов
+        function cleanup() {
+            console.log('Очистка ресурсов JavaScript...');
+            
+            // Остановка анимации
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            // Удаление обработчиков событий
+            if (resizeHandler) {
+                window.removeEventListener('resize', resizeHandler);
+                resizeHandler = null;
+            }
+            
+            if (clickHandler && canvas) {
+                canvas.removeEventListener('click', clickHandler);
+                clickHandler = null;
+            }
+            
+            if (mousemoveHandler && canvas) {
+                canvas.removeEventListener('mousemove', mousemoveHandler);
+                mousemoveHandler = null;
+            }
+            
+            if (clearBtnHandler) {
+                const clearBtn = document.getElementById('clearBtn');
+                if (clearBtn) {
+                    clearBtn.removeEventListener('click', clearBtnHandler);
+                }
+                clearBtnHandler = null;
+            }
+            
+            // Очистка массива частиц
+            particles.length = 0;
+        }
+            
+        // Адаптация размера canvas
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = Math.min(400, rect.width * 0.5);
+        }
+            
+        resizeCanvas();
+        resizeHandler = resizeCanvas;
+        window.addEventListener('resize', resizeHandler);
+            
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.005 + 0.002; // Замедлено затухание
+                this.size = Math.random() * 5 + 2;
+                this.color = `hsl(${Math.random() * 360}, 70%, 60%)`;
+            }
+                
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= this.decay;
+                this.vy += 0.03; // Уменьшена гравитация
+            }
+                
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+            
+        function animate() {
+            // Проверка существования элементов - если страница была переключена, прекращаем анимацию
+            const particleCountElement = document.getElementById('particleCount');
+            if (!particleCountElement || !document.contains(canvas)) {
+                console.log('Элементы удалены из DOM, прекращаем анимацию');
+                cleanup();
+                return;
+            }
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+            // Обновление и отрисовка частиц
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const particle = particles[i];
+                particle.update();
+                particle.draw();
+                    
+                if (particle.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+                
+            // Обновление счетчика
+            particleCountElement.textContent = particles.length;
+                
+            // Соединение близких частиц
+            ctx.strokeStyle = 'rgba(0, 123, 255, 0.3)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                    if (distance < 100) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+                
+            animationId = requestAnimationFrame(animate);
+        }
+            
+        // Обработка клика по canvas
+        clickHandler = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+                
+            // Создание взрыва частиц
+            for (let i = 0; i < 20; i++) {
+                particles.push(new Particle(x, y));
+            }
+        };
+        canvas.addEventListener('click', clickHandler);
+            
+        // Обработка движения мыши
+        mousemoveHandler = (e) => {
+            if (e.buttons === 1) { // Левая кнопка мыши нажата
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                particles.push(new Particle(x, y));
+            }
+        };
+        canvas.addEventListener('mousemove', mousemoveHandler);
+            
+        // Кнопка очистки
+        const clearBtn = document.getElementById('clearBtn');
+        if (clearBtn) {
+            clearBtnHandler = () => {
+                particles.length = 0;
+            };
+            clearBtn.addEventListener('click', clearBtnHandler);
+        }
+            
+        // Запуск анимации
+        animate();
+    })();
+</script>
+
+

@@ -10,6 +10,7 @@ namespace AlienFruit.Astra.ViewBox
 
         public required string Id { get; set; }
         public string? OnStartLoadingJsFunction { get; set; }
+        public string? OnTimeoutAfterStartLoadingJsFunction { get; set; }
         public string? OnFinishLoadingJsFunction { get; set; }
         public string? OnScriptsExecutedJsFunction { get; set; }
         public int StartLoadingEventDelay { get; set; } = 100;
@@ -57,6 +58,7 @@ namespace AlienFruit.Astra.ViewBox
                 StartLoadingEventDelay = StartLoadingEventDelay,
                 OnFinishLoadingJsFunction = OnFinishLoadingJsFunction,
                 OnStartLoadingJsFunction = OnStartLoadingJsFunction,
+                OnTimeoutAfterStartLoadingJsFunction = OnTimeoutAfterStartLoadingJsFunction,
                 OnScriptsExecutedJsFunction = OnScriptsExecutedJsFunction,
                 ChangingBrowserAddressEnable = ChangingBrowserAddressEnable,
                 ParrentViewBoxId = ParentViewBoxId,

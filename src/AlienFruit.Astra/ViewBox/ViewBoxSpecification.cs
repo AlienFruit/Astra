@@ -7,6 +7,7 @@
 
         public required string Id { get; set; }
         public string? OnStartLoadingJsFunction { get; set; }
+        public string? OnTimeoutAfterStartLoadingJsFunction { get; set; }
         public string? OnFinishLoadingJsFunction { get; set; }
         public string? OnScriptsExecutedJsFunction { get; set; }
         public int StartLoadingEventDelay { get; set; } = 100;

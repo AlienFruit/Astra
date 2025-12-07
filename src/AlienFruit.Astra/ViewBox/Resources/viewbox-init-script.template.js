@@ -32,6 +32,12 @@ ViewBoxRegistry
     .subscribeOnStartLoading({{ OnStartLoadingJsFunction }});
 {{ end }}
 
+{{ if OnTimeoutAfterStartLoadingJsFunction && OnTimeoutAfterStartLoadingJsFunction != "" }}
+ViewBoxRegistry
+    .get('{{ Id }}')
+    .subscribeOnTimeoutAfterStartLoading({{ OnTimeoutAfterStartLoadingJsFunction }});
+{{ end }}
+
 {{ if OnFinishLoadingJsFunction && OnFinishLoadingJsFunction != "" }}
 ViewBoxRegistry
     .get('{{ Id }}')

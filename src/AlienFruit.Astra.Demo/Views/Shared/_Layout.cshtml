@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="~/AlienFruit.Astra.Demo.styles.css" asp-append-version="true" />
     @AstraEngine.RenderHeaders()
     <script>
-        function onStartLoading(){
+        function onTimeoutAfterStartLoading(){
             document.getElementById('loading-icon').style.visibility = 'visible';
         }
 
@@ -92,7 +92,7 @@
     <div class="container">
         <main role="main" class="pb-3">
             <view-box id="main-view-box1" class="pb-3" role="main"
-                on-start-loading-js-function="onStartLoading"
+                on-timeout-after-start-loading-js-function="onTimeoutAfterStartLoading"
                 on-finish-loading-js-function="onFinishLoading"     
                 connection-error-message-resource=@(new EmbeddedResource(
                     name: "ViewBoxError.html", 

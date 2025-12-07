@@ -50,6 +50,7 @@ class ViewBox {
         this._isRequestInProgress = false;
 
         // подписчики
+        this._onTimeoutAfterStartLoadingSubscribers = [];
         this._onStartLoadingSubscribers = [];
         this._onFinishLoadingSubscribers = [];
         this._onScriptsExecutedSubscribers = [];
@@ -73,6 +74,17 @@ class ViewBox {
             throw new Error('Подписчик onStartLoading должен быть функцией');
         }
         this._onStartLoadingSubscribers.push(fn);
+    }
+
+     /**
+     * Подписка на событие таймаута после начала загрузки
+     * @param {Function} fn
+     */
+     subscribeOnTimeoutAfterStartLoading(fn) {
+        if (typeof fn !== 'function') {
+            throw new Error('Подписчик onTimeoutAfterStartLoading должен быть функцией');
+        }
+        this._onTimeoutAfterStartLoadingSubscribers.push(fn);
     }
 
     /**
@@ -192,6 +204,7 @@ class ViewBox {
 
         // Очищаем подписчики
         this._onStartLoadingSubscribers = [];
+        this._onTimeoutAfterStartLoadingSubscribers = [];
         this._onFinishLoadingSubscribers = [];
         this._onScriptsExecutedSubscribers = [];
     }
@@ -270,10 +283,14 @@ class ViewBox {
 
     _sendStartLoadingEvent() {
         this._timer = setTimeout((self) => {
-            self._onStartLoadingSubscribers.forEach(fn => {
-                try { fn(); } catch (e) { console.error('onStartLoading subscriber error', e); }
+            self._onTimeoutAfterStartLoadingSubscribers.forEach(fn => {
+                try { fn(); } catch (e) { console.error('onTimeoutAfterStartLoading subscriber error', e); }
             });
         }, this._startLoadingEventDelay, this);
+
+        this._onStartLoadingSubscribers.forEach(fn => {
+            try { fn(); } catch (e) { console.error('onStartLoading subscriber error', e); }
+        });
     }
 
     _sendEndLoadingEvent() {

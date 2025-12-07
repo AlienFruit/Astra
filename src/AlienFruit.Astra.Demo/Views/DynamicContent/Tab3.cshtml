@@ -16,6 +16,41 @@
         <div class="alert alert-warning">
             <strong>Важно!</strong> Адрес в браузере остался прежним благодаря параметру <code>changing-browser-address-enable="false"</code>.
         </div>
+
+        <div class="alert alert-secondary">
+            <h5><strong>Нюансы реализации через JavaScript:</strong></h5>
+            <p>Эта вкладка загружается не через стандартный <code>&lt;view-box-link&gt;</code>, а через обычный HTML элемент с обработчиком событий JavaScript.</p>
+            <p><strong>Когда рекомендуется использовать JS-вариант:</strong></p>
+            <ul>
+                <li>Нужен полный контроль над внешним видом и поведением элемента управления</li>
+                <li>Необходима интеграция с существующими JavaScript фреймворками (React, Vue, Angular)</li>
+                <li>Требуется добавить дополнительную логику перед отправкой запроса (валидация, подтверждение)</li>
+                <li>Загрузка контента должна происходить программно из любого места кода</li>
+                <li>Элемент управления не является ссылкой (кнопки, формы, кастомные компоненты)</li>
+            </ul>
+            <p><strong>Пример реализации:</strong></p>
+            <pre><code>&lt;div id="dynamic-tab3-link"
+    class="btn btn-primary"
+    onclick="ViewBoxRegistry.sendRequest('dynamic-content-box', '/DynamicContent/Tab3');"&gt;
+    Test request from JS
+&lt;/div&gt;</code></pre>
+            <p><strong>Основные методы API:</strong></p>
+            <ul>
+                <li><code>ViewBoxRegistry.sendRequest(viewBoxId, uri)</code> - отправка запроса</li>
+                <li><code>ViewBoxRegistry.abortCurrentRequest(viewBoxId)</code> - отмена текущего запроса</li>
+            </ul>
+            <p><strong>Параметры методов:</strong></p>
+            <ul>
+                <li><code>viewBoxId</code> - ID целевого view-box элемента</li>
+                <li><code>uri</code> - адрес для загрузки контента</li>
+            </ul>
+            <p><strong>Дополнительные возможности:</strong></p>
+            <ul>
+                <li>Автоматическая отмена предыдущего запроса при отправке нового</li>
+                <li>Поддержка передачи дополнительных параметров в POST запросах</li>
+                <li>Программная отмена выполняющегося запроса через <code>ViewBoxRegistry.abortCurrentRequest(viewBoxId)</code></li>
+            </ul>
+        </div>
     </div>
 </div>
 

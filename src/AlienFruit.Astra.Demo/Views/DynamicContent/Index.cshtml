@@ -29,13 +29,11 @@
         Tab 2
     </view-box-link>
     
-    <view-box-link id="dynamic-tab3-link"
-        default-class-name="btn btn-primary"
-        selected-class-name="btn btn-primary active"
-        view-box-id="dynamic-content-box"
-        uri="/DynamicContent/Tab3">
-        Tab 3
-    </view-box-link>
+    <div id="dynamic-tab3-link" 
+        class="btn btn-primary" 
+        onclick="ViewBoxRegistry.sendRequest('dynamic-content-box', '/DynamicContent/Tab3');">
+        Test request from JS
+    </div>
 </div>
 
 <view-box id="dynamic-content-box" 

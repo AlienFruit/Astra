@@ -97,6 +97,14 @@ class ViewBox {
         this._onScriptsExecutedSubscribers.push(fn);
     }
 
+    /**
+     * Регистрирует элемент управления для указанного URI
+     * @param {string} uri URI для загрузки контента
+     * @param {string} elementId ID HTML элемента
+     * @param {string} selectedClassName CSS класс для активного состояния
+     * @param {string} defaultClassName CSS класс для неактивного состояния
+     * @param {boolean} scrollUp Флаг прокрутки страницы вверх при активации
+     */
     registerUri(uri, elementId, selectedClassName, defaultClassName, scrollUp) {
         const element = document.getElementById(elementId);
         if (!element) {
@@ -128,12 +136,22 @@ class ViewBox {
         }
     }
 
+    /**
+     * Отправляет запрос на загрузку контента по указанному URI
+     * @param {string} uri URI для загрузки контента
+     * @returns {boolean} false (для предотвращения стандартного поведения)
+     */
     sendRequest(uri) {
         this._selectUri(uri);
         this._sendRequest(uri, null, false);
         return false;
     }
 
+    /**
+     * Отправляет запрос на загрузку контента с восстановлением позиции прокрутки
+     * @param {string} uri URI для загрузки контента
+     * @returns {boolean} false (для предотвращения стандартного поведения)
+     */
     sendRequestAndRestoreScrollPosition(uri) {
         this._restoreScrollPosition = true;
         this._selectUri(uri);
@@ -143,6 +161,7 @@ class ViewBox {
 
     /**
      * Отменяет текущий выполняющийся запрос
+     * @returns {boolean} true, если запрос был успешно отменен, false если запроса не было или он уже отменен
      */
     abortCurrentRequest() {
         if (this.abortController && !this.abortController.signal.aborted) {
@@ -353,19 +372,41 @@ class ViewBox {
 class ViewBoxRegistry {
     static _registry = {};
 
+    /**
+     * Создает новый экземпляр ViewBox и регистрирует его
+     * @param {string} id Уникальный идентификатор ViewBox
+     * @param {ViewBoxSpecification} specification Параметры инициализации ViewBox
+     * @returns {ViewBox} Созданный экземпляр ViewBox
+     * @throws {Error} Если ViewBox с таким id уже существует
+     */
     static create(id, specification) {
+        if (this.isCreated(id)) {
+            throw new Error(`ViewBox with id '${id}' already exists. Use destroy() first to remove existing ViewBox.`);
+        }
+
         const instance = new ViewBox(specification);
         this._registry[id] = instance;
         document.dispatchEvent(new CustomEvent('ViewBoxReady', { detail: { viewBoxId: id } }));
         return instance;
     }
 
+    /**
+     * Получает экземпляр ViewBox по идентификатору
+     * @param {string} id Идентификатор ViewBox
+     * @returns {ViewBox} Экземпляр ViewBox
+     * @throws {Error} Если ViewBox с указанным id не найден
+     */
     static get(id) {
         const instance = this._registry[id];
         if (!instance) throw new Error(`ViewBox ${id} not found`);
         return instance;
     }
 
+    /**
+     * Проверяет, создан ли ViewBox с указанным идентификатором
+     * @param {string} id Идентификатор ViewBox
+     * @returns {boolean} true, если ViewBox существует
+     */
     static isCreated(id) {
         return id in this._registry;
     }
@@ -393,6 +434,7 @@ class ViewBoxRegistry {
 
     /**
      * Уничтожает все объекты ViewBox в реестре
+     * Автоматически отменяет все выполняющиеся запросы перед уничтожением
      */
     static destroyAll() {
         const ids = Object.keys(this._registry);
@@ -400,9 +442,9 @@ class ViewBoxRegistry {
     }
 
     /**
-     * Получает экземпляр ViewBox по id, либо вызывает callback, когда он будет готов
-     * @param {string} id - идентификатор ViewBox
-     * @param {function} callback - функция, принимающая экземпляр ViewBox
+     * Получает экземпляр ViewBox по идентификатору, либо вызывает callback, когда он будет готов
+     * @param {string} id Идентификатор ViewBox
+     * @param {function} callback Функция, которая будет вызвана с экземпляром ViewBox
      */
     static getOrOnReady(id, callback) {
         if (this.isCreated(id)) {
@@ -427,5 +469,17 @@ class ViewBoxRegistry {
         ViewBoxRegistry.getOrOnReady(viewBoxId, function (viewBox) {
             viewBox.sendRequest(href);
         });
+    }
+
+    /**
+     * Отменяет текущий выполняющийся запрос в указанном ViewBox.
+     * @param {string} viewBoxId - Идентификатор ViewBox.
+     * @returns {boolean} true, если запрос был успешно отменен
+     */
+    static abortCurrentRequest(viewBoxId) {
+        if (ViewBoxRegistry.isCreated(viewBoxId)) {
+            return ViewBoxRegistry.get(viewBoxId).abortCurrentRequest();
+        }
+        return false;
     }
 }

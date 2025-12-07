@@ -391,6 +391,23 @@ class ViewBoxRegistry {
     }
 
     /**
+     * Получает существующий экземпляр ViewBox или создает новый, если он не существует
+     * @param {string} id Уникальный идентификатор ViewBox
+     * @param {ViewBoxSpecification} specification Параметры инициализации ViewBox (используется только при создании)
+     * @returns {ViewBox} Экземпляр ViewBox
+     */
+    static getOrCreate(id, specification) {
+        if (this.isCreated(id)) {
+            return this.get(id);
+        }
+
+        const instance = new ViewBox(specification);
+        this._registry[id] = instance;
+        document.dispatchEvent(new CustomEvent('ViewBoxReady', { detail: { viewBoxId: id } }));
+        return instance;
+    }
+
+    /**
      * Получает экземпляр ViewBox по идентификатору
      * @param {string} id Идентификатор ViewBox
      * @returns {ViewBox} Экземпляр ViewBox

@@ -2,15 +2,15 @@
 
 /**
  * @typedef {Object} ViewBoxSpecification
- * @property {string} id Уникальный идентификатор (обязательный)
- * @property {boolean} changingBrowserAddressEnable Разрешает изменение адреса браузера
+ * @property {string} id Unique identifier (required)
+ * @property {boolean} changingBrowserAddressEnable Allows browser address change
  * @property {string} connectionErrorMessage
- * @property {number} [startLoadingEventDelay] Задержка перед событием начала загрузки (мс, по умолчанию 100)
+ * @property {number} [startLoadingEventDelay] Delay before start loading event (ms, default 100)
  */
 class ViewBox {
     /**
-     * @param {ViewBoxSpecification} specification Параметры инициализации
-     * @throws {Error} Если обязательные параметры отсутствуют или неверного типа
+     * @param {ViewBoxSpecification} specification Initialization parameters
+     * @throws {Error} If required parameters are missing or of wrong type
      */
     constructor(specification) {
         const {
@@ -20,7 +20,7 @@ class ViewBox {
             startLoadingEventDelay
         } = specification;
 
-        // Валидация обязательных параметров
+        // Validate required parameters
         if (typeof id !== 'string' || !id.trim()) {
             throw new Error('Invalid or missing id: must be non-empty string');
         }
@@ -34,7 +34,7 @@ class ViewBox {
             throw new Error('startLoadingEventDelay must be a non-negative number');
         }
 
-        // Инициализация свойств
+        // Initialize properties
         this._id = id;
         this._changingBrowserAddressEnable = changingBrowserAddressEnable;
         this._connectionErrorMessage = connectionErrorMessage;
@@ -49,7 +49,7 @@ class ViewBox {
         this._loadedScripts = new Set();
         this._isRequestInProgress = false;
 
-        // подписчики
+        // subscribers
         this._onTimeoutAfterStartLoadingSubscribers = [];
         this._onStartLoadingSubscribers = [];
         this._onFinishLoadingSubscribers = [];
@@ -57,7 +57,7 @@ class ViewBox {
 
         for (let script of document.getElementsByTagName('script')) {
             if (script.src) {
-                // Добавляем только относительный путь скрипта, например /js/test.js
+                // Add only relative script path, e.g. /js/test.js
                 const scriptUrl = new URL(script.src, window.location.origin);
                 const relativePath = scriptUrl.pathname + scriptUrl.search + scriptUrl.hash;
                 this._loadedScripts.add(relativePath);
@@ -66,56 +66,56 @@ class ViewBox {
     }
 
     /**
-     * Подписка на событие начала загрузки
+     * Subscribe to start loading event
      * @param {Function} fn
      */
     subscribeOnStartLoading(fn) {
         if (typeof fn !== 'function') {
-            throw new Error('Подписчик onStartLoading должен быть функцией');
+            throw new Error('onStartLoading subscriber must be a function');
         }
         this._onStartLoadingSubscribers.push(fn);
     }
 
      /**
-     * Подписка на событие таймаута после начала загрузки
+     * Subscribe to timeout after start loading event
      * @param {Function} fn
      */
      subscribeOnTimeoutAfterStartLoading(fn) {
         if (typeof fn !== 'function') {
-            throw new Error('Подписчик onTimeoutAfterStartLoading должен быть функцией');
+            throw new Error('onTimeoutAfterStartLoading subscriber must be a function');
         }
         this._onTimeoutAfterStartLoadingSubscribers.push(fn);
     }
 
     /**
-     * Подписка на событие завершения загрузки
+     * Subscribe to finish loading event
      * @param {Function} fn
      */
     subscribeOnFinishLoading(fn) {
         if (typeof fn !== 'function') {
-            throw new Error('Подписчик onFinishLoading должен быть функцией');
+            throw new Error('onFinishLoading subscriber must be a function');
         }
         this._onFinishLoadingSubscribers.push(fn);
     }
 
     /**
-     * Подписка на событие выполнения всех inline-скриптов
+     * Subscribe to all inline scripts executed event
      * @param {Function} fn
      */
     subscribeOnScriptsExecuted(fn) {
         if (typeof fn !== 'function') {
-            throw new Error('Подписчик onScriptsExecuted должен быть функцией');
+            throw new Error('onScriptsExecuted subscriber must be a function');
         }
         this._onScriptsExecutedSubscribers.push(fn);
     }
 
     /**
-     * Регистрирует элемент управления для указанного URI
-     * @param {string} uri URI для загрузки контента
-     * @param {string} elementId ID HTML элемента
-     * @param {string} selectedClassName CSS класс для активного состояния
-     * @param {string} defaultClassName CSS класс для неактивного состояния
-     * @param {boolean} scrollUp Флаг прокрутки страницы вверх при активации
+     * Registers control element for specified URI
+     * @param {string} uri URI for content loading
+     * @param {string} elementId HTML element ID
+     * @param {string} selectedClassName CSS class for active state
+     * @param {string} defaultClassName CSS class for inactive state
+     * @param {boolean} scrollUp Flag to scroll page up on activation
      */
     registerUri(uri, elementId, selectedClassName, defaultClassName, scrollUp) {
         const element = document.getElementById(elementId);
@@ -149,9 +149,9 @@ class ViewBox {
     }
 
     /**
-     * Отправляет запрос на загрузку контента по указанному URI
-     * @param {string} uri URI для загрузки контента
-     * @returns {boolean} false (для предотвращения стандартного поведения)
+     * Sends request to load content for specified URI
+     * @param {string} uri URI for content loading
+     * @returns {boolean} false (to prevent default behavior)
      */
     sendRequest(uri) {
         this._selectUri(uri);
@@ -160,9 +160,9 @@ class ViewBox {
     }
 
     /**
-     * Отправляет запрос на загрузку контента с восстановлением позиции прокрутки
-     * @param {string} uri URI для загрузки контента
-     * @returns {boolean} false (для предотвращения стандартного поведения)
+     * Sends request to load content with scroll position restoration
+     * @param {string} uri URI for content loading
+     * @returns {boolean} false (to prevent default behavior)
      */
     sendRequestAndRestoreScrollPosition(uri) {
         this._restoreScrollPosition = true;
@@ -172,8 +172,8 @@ class ViewBox {
     }
 
     /**
-     * Отменяет текущий выполняющийся запрос
-     * @returns {boolean} true, если запрос был успешно отменен, false если запроса не было или он уже отменен
+     * Cancels current running request
+     * @returns {boolean} true if request was successfully cancelled, false if there was no request or it was already cancelled
      */
     abortCurrentRequest() {
         if (this.abortController && !this.abortController.signal.aborted) {
@@ -185,24 +185,24 @@ class ViewBox {
     }
 
     /**
-     * Проверяет, выполняется ли запрос в данный момент
-     * @returns {boolean} true, если запрос выполняется
+     * Checks if request is currently in progress
+     * @returns {boolean} true if request is in progress
      */
     get isRequestInProgress() {
         return this._isRequestInProgress;
     }
 
     /**
-     * Очищает все ресурсы ViewBox (таймеры, подписчики)
+     * Cleans up all ViewBox resources (timers, subscribers)
      */
     cleanup() {
-        // Очищаем таймеры
+        // Clear timers
         if (this._timer) {
             clearTimeout(this._timer);
             this._timer = undefined;
         }
 
-        // Очищаем подписчики
+        // Clear subscribers
         this._onStartLoadingSubscribers = [];
         this._onTimeoutAfterStartLoadingSubscribers = [];
         this._onFinishLoadingSubscribers = [];
@@ -232,7 +232,7 @@ class ViewBox {
     }
 
     _sendRequest(uri, postParams, dontSaveHistory) {
-        // Отмена предыдущего запроса, если он еще выполняется
+        // Cancel previous request if it's still running
         if (this.abortController && !this.abortController.signal.aborted) {
             this.abortController.abort();
         }
@@ -255,10 +255,10 @@ class ViewBox {
             fetchOptions.body = postParams;
         }
 
-        // Выполнение запроса
+        // Execute request
         fetch(uri, fetchOptions)
             .then(response => {
-                // Сохраняем финальный URL после возможного редиректа
+                // Save final URL after possible redirect
                 this._saveBrowserHistory(response.url, dontSaveHistory);
                 return Promise.all([response.text(), response.url]);
             })
@@ -270,7 +270,7 @@ class ViewBox {
                 this._sendEndLoadingEvent();
                 if (error.name === 'AbortError') {
                     console.log('Request aborted');
-                    clearTimeout(this._timer); // Отменяем таймер загрузки при отмене запроса
+                    clearTimeout(this._timer); // Cancel loading timer when request is cancelled
                     return;
                 }
 
@@ -344,12 +344,12 @@ class ViewBox {
         let content = response;
         let html_content = content.replace(re, '');
 
-        // Обработка контента
+        // Content processing
         if (!voidTag.test(content)) {
             document.getElementById(this._id).innerHTML = html_content;
         }
 
-        // Прокрутка страницы
+        // Page scrolling
         if (this._scrollUp) {
             window.scrollTo(0, 0);
             this._scrollUp = false;
@@ -358,7 +358,7 @@ class ViewBox {
             this._restoreScrollPosition = false;
         }
 
-        // Извлечение и загрузка внешних скриптов
+        // Extract and load external scripts
         let srcMatch;
         while ((srcMatch = srcRe.exec(content)) !== null) {
             try {
@@ -368,7 +368,7 @@ class ViewBox {
             }
         }
 
-        // Извлечение и выполнение встроенных
+        // Extract and execute inline scripts
         let j_script_content = '';
         let match;
         while ((match = re.exec(content)) !== null) {
@@ -390,11 +390,11 @@ class ViewBoxRegistry {
     static _registry = {};
 
     /**
-     * Создает новый экземпляр ViewBox и регистрирует его
-     * @param {string} id Уникальный идентификатор ViewBox
-     * @param {ViewBoxSpecification} specification Параметры инициализации ViewBox
-     * @returns {ViewBox} Созданный экземпляр ViewBox
-     * @throws {Error} Если ViewBox с таким id уже существует
+     * Creates new ViewBox instance and registers it
+     * @param {string} id Unique ViewBox identifier
+     * @param {ViewBoxSpecification} specification ViewBox initialization parameters
+     * @returns {ViewBox} Created ViewBox instance
+     * @throws {Error} If ViewBox with this id already exists
      */
     static create(id, specification) {
         if (this.isCreated(id)) {
@@ -408,10 +408,10 @@ class ViewBoxRegistry {
     }
 
     /**
-     * Получает существующий экземпляр ViewBox или создает новый, если он не существует
-     * @param {string} id Уникальный идентификатор ViewBox
-     * @param {ViewBoxSpecification} specification Параметры инициализации ViewBox (используется только при создании)
-     * @returns {ViewBox} Экземпляр ViewBox
+     * Gets existing ViewBox instance or creates new one if it doesn't exist
+     * @param {string} id Unique ViewBox identifier
+     * @param {ViewBoxSpecification} specification ViewBox initialization parameters (used only when creating)
+     * @returns {ViewBox} ViewBox instance
      */
     static getOrCreate(id, specification) {
         if (this.isCreated(id)) {
@@ -425,10 +425,10 @@ class ViewBoxRegistry {
     }
 
     /**
-     * Получает экземпляр ViewBox по идентификатору
-     * @param {string} id Идентификатор ViewBox
-     * @returns {ViewBox} Экземпляр ViewBox
-     * @throws {Error} Если ViewBox с указанным id не найден
+     * Gets ViewBox instance by identifier
+     * @param {string} id ViewBox identifier
+     * @returns {ViewBox} ViewBox instance
+     * @throws {Error} If ViewBox with specified id is not found
      */
     static get(id) {
         const instance = this._registry[id];
@@ -437,18 +437,18 @@ class ViewBoxRegistry {
     }
 
     /**
-     * Проверяет, создан ли ViewBox с указанным идентификатором
-     * @param {string} id Идентификатор ViewBox
-     * @returns {boolean} true, если ViewBox существует
+     * Checks if ViewBox with specified identifier is created
+     * @param {string} id ViewBox identifier
+     * @returns {boolean} true if ViewBox exists
      */
     static isCreated(id) {
         return id in this._registry;
     }
 
     /**
-     * Уничтожает объект ViewBox и удаляет его из реестра
-     * @param {string} id Идентификатор ViewBox для уничтожения
-     * @returns {boolean} true, если объект был успешно уничтожен, false если объект не найден
+     * Destroys ViewBox object and removes it from registry
+     * @param {string} id ViewBox identifier to destroy
+     * @returns {boolean} true if object was successfully destroyed, false if object not found
      */
     static destroy(id) {
         const instance = this._registry[id];
@@ -467,8 +467,8 @@ class ViewBoxRegistry {
     }
 
     /**
-     * Уничтожает все объекты ViewBox в реестре
-     * Автоматически отменяет все выполняющиеся запросы перед уничтожением
+     * Destroys all ViewBox objects in registry
+     * Automatically cancels all running requests before destruction
      */
     static destroyAll() {
         const ids = Object.keys(this._registry);
@@ -476,9 +476,9 @@ class ViewBoxRegistry {
     }
 
     /**
-     * Получает экземпляр ViewBox по идентификатору, либо вызывает callback, когда он будет готов
-     * @param {string} id Идентификатор ViewBox
-     * @param {function} callback Функция, которая будет вызвана с экземпляром ViewBox
+     * Gets ViewBox instance by identifier, or calls callback when it becomes ready
+     * @param {string} id ViewBox identifier
+     * @param {function} callback Function that will be called with ViewBox instance
      */
     static getOrOnReady(id, callback) {
         if (this.isCreated(id)) {
@@ -495,9 +495,9 @@ class ViewBoxRegistry {
     }
 
     /**
-     * Открывает ссылку в указанном ViewBox.
-     * @param {string} viewBoxId - Идентификатор ViewBox.
-     * @param {string} href - URL для открытия.
+     * Opens link in specified ViewBox.
+     * @param {string} viewBoxId - ViewBox identifier.
+     * @param {string} href - URL to open.
      */
     static sendRequest(viewBoxId, href) {
         ViewBoxRegistry.getOrOnReady(viewBoxId, function (viewBox) {
@@ -506,9 +506,9 @@ class ViewBoxRegistry {
     }
 
     /**
-     * Отменяет текущий выполняющийся запрос в указанном ViewBox.
-     * @param {string} viewBoxId - Идентификатор ViewBox.
-     * @returns {boolean} true, если запрос был успешно отменен
+     * Cancels current running request in specified ViewBox.
+     * @param {string} viewBoxId - ViewBox identifier.
+     * @returns {boolean} true if request was successfully cancelled
      */
     static abortCurrentRequest(viewBoxId) {
         if (ViewBoxRegistry.isCreated(viewBoxId)) {

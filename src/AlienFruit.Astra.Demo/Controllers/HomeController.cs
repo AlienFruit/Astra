@@ -18,7 +18,7 @@ namespace AlienFruit.Astra.Demo.Controllers
 
         public async Task<IActionResult> LongLoading()
         {
-            // Имитация долгой загрузки - задержка 3 секунды
+            // Simulate long loading - 3 second delay
             await Task.Delay(3000);
             return View();
         }

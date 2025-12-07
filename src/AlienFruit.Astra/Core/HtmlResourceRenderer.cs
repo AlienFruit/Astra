@@ -1,4 +1,4 @@
-﻿using AlienFruit.Astra.Abstractions;
+using AlienFruit.Astra.Abstractions;
 using AlienFruit.Astra.Configuration;
 using Microsoft.AspNetCore.Html;
 using Microsoft.Extensions.Options;
@@ -139,13 +139,13 @@ namespace AlienFruit.Astra.Core
                 return string.Empty;
             }
 
-            // Если указана глобальная версия, используем её
+            // If global version is specified, use it
             if (!string.IsNullOrEmpty(options.Value.ResourceVersion))
             {
                 return $"?v={options.Value.ResourceVersion}";
             }
 
-            // Иначе используем хеш содержимого
+            // Otherwise use content hash
             if (resourceHashes.TryGetValue(resourceName, out var hash))
             {
                 return $"?v={hash}";
@@ -170,7 +170,7 @@ namespace AlienFruit.Astra.Core
             }
             catch
             {
-                // Если не удалось вычислить хеш, используем временную метку
+                // If hash calculation failed, use timestamp
                 var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 resourceHashes.TryAdd(resourceName, timestamp.ToString());
             }

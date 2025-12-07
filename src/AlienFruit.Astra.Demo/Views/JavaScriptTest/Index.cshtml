@@ -9,39 +9,39 @@
 
 <div class="text-center mb-4">
     <h1 class="display-4">JavaScript Dynamic Loading Test</h1>
-    <p class="lead">Эта страница демонстрирует динамическую загрузку JavaScript через view-box.</p>
+    <p class="lead">This page demonstrates dynamic JavaScript loading via view-box.</p>
 </div>
 
 <div class="card mb-4">
     <div class="card-header bg-info text-white">
-        <h3 class="mb-0">Интерактивная анимация частиц</h3>
+        <h3 class="mb-0">Interactive Particle Animation</h3>
     </div>
     <div class="card-body">
-        <p>Нажмите на canvas ниже, чтобы создать частицы. JavaScript загружается динамически при загрузке этой страницы.</p>
+        <p>Click on the canvas below to create particles. JavaScript is loaded dynamically when this page loads.</p>
         <canvas id="particleCanvas" width="800" height="400" style="border: 2px solid #007bff; border-radius: 8px; cursor: crosshair; width: 100%; max-width: 800px; height: auto;"></canvas>
         <div class="mt-3">
-            <button id="clearBtn" class="btn btn-secondary">Очистить</button>
-            <span class="ms-3">Частиц на экране: <strong id="particleCount">0</strong></span>
+            <button id="clearBtn" class="btn btn-secondary">Clear</button>
+            <span class="ms-3">Particles on screen: <strong id="particleCount">0</strong></span>
         </div>
     </div>
 </div>
 
 <div class="card">
     <div class="card-header bg-success text-white">
-        <h3 class="mb-0">Информация о загрузке</h3>
+        <h3 class="mb-0">Loading Information</h3>
     </div>
     <div class="card-body">
         <div class="alert alert-success">
-            <strong>Успешно!</strong> JavaScript был загружен динамически через view-box и выполнен на этой странице.
+            <strong>Success!</strong> JavaScript was loaded dynamically via view-box and executed on this page.
         </div>
-        <p>Этот JavaScript код загружается из тега <code>&lt;script&gt;</code> и выполняется только после того, как контент был загружен в view-box. 
-           Это демонстрирует возможность динамической загрузки и выполнения скриптов из тега <code>&lt;script&gt;</code>.</p>
+        <p>This JavaScript code is loaded from <code>&lt;script&gt;</code> tag and executes only after content was loaded into view-box.
+           This demonstrates the ability to dynamically load and execute scripts from <code>&lt;script&gt;</code> tag.</p>
     </div>
 </div>
 
 <script>
     (function() {
-        console.log('JavaScript загружен и выполнен динамически!');
+        console.log('JavaScript loaded and executed dynamically!');
             
         const canvas = document.getElementById('particleCanvas');
         if (!canvas) return;
@@ -54,17 +54,17 @@
         let mousemoveHandler = null;
         let clearBtnHandler = null;
             
-        // Функция очистки всех ресурсов
+        // Function to clean up all resources
         function cleanup() {
-            console.log('Очистка ресурсов JavaScript...');
-            
-            // Остановка анимации
+            console.log('Cleaning up JavaScript resources...');
+
+            // Stop animation
             if (animationId) {
                 cancelAnimationFrame(animationId);
                 animationId = null;
             }
             
-            // Удаление обработчиков событий
+            // Remove event handlers
             if (resizeHandler) {
                 window.removeEventListener('resize', resizeHandler);
                 resizeHandler = null;
@@ -88,11 +88,11 @@
                 clearBtnHandler = null;
             }
             
-            // Очистка массива частиц
+            // Clear particles array
             particles.length = 0;
         }
             
-        // Адаптация размера canvas
+        // Canvas size adaptation
         function resizeCanvas() {
             const rect = canvas.getBoundingClientRect();
             canvas.width = rect.width;
@@ -110,7 +110,7 @@
                 this.vx = (Math.random() - 0.5) * 4;
                 this.vy = (Math.random() - 0.5) * 4;
                 this.life = 1.0;
-                this.decay = Math.random() * 0.005 + 0.002; // Замедлено затухание
+                this.decay = Math.random() * 0.005 + 0.002; // Slowed decay
                 this.size = Math.random() * 5 + 2;
                 this.color = `hsl(${Math.random() * 360}, 70%, 60%)`;
             }
@@ -119,7 +119,7 @@
                 this.x += this.vx;
                 this.y += this.vy;
                 this.life -= this.decay;
-                this.vy += 0.03; // Уменьшена гравитация
+                this.vy += 0.03; // Reduced gravity
             }
                 
             draw() {
@@ -134,17 +134,17 @@
         }
             
         function animate() {
-            // Проверка существования элементов - если страница была переключена, прекращаем анимацию
+            // Check if elements exist - if page was switched, stop animation
             const particleCountElement = document.getElementById('particleCount');
             if (!particleCountElement || !document.contains(canvas)) {
-                console.log('Элементы удалены из DOM, прекращаем анимацию');
+                console.log('Elements removed from DOM, stopping animation');
                 cleanup();
                 return;
             }
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
-            // Обновление и отрисовка частиц
+            // Update and draw particles
             for (let i = particles.length - 1; i >= 0; i--) {
                 const particle = particles[i];
                 particle.update();
@@ -155,10 +155,10 @@
                 }
             }
                 
-            // Обновление счетчика
+            // Update counter
             particleCountElement.textContent = particles.length;
                 
-            // Соединение близких частиц
+            // Connect close particles
             ctx.strokeStyle = 'rgba(0, 123, 255, 0.3)';
             ctx.lineWidth = 1;
             for (let i = 0; i < particles.length; i++) {
@@ -179,22 +179,22 @@
             animationId = requestAnimationFrame(animate);
         }
             
-        // Обработка клика по canvas
+        // Handle canvas click
         clickHandler = (e) => {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
                 
-            // Создание взрыва частиц
+            // Create particle explosion
             for (let i = 0; i < 20; i++) {
                 particles.push(new Particle(x, y));
             }
         };
         canvas.addEventListener('click', clickHandler);
             
-        // Обработка движения мыши
+        // Handle mouse movement
         mousemoveHandler = (e) => {
-            if (e.buttons === 1) { // Левая кнопка мыши нажата
+            if (e.buttons === 1) { // Left mouse button pressed
                 const rect = canvas.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
@@ -203,7 +203,7 @@
         };
         canvas.addEventListener('mousemove', mousemoveHandler);
             
-        // Кнопка очистки
+        // Clear button
         const clearBtn = document.getElementById('clearBtn');
         if (clearBtn) {
             clearBtnHandler = () => {
@@ -212,7 +212,7 @@
             clearBtn.addEventListener('click', clearBtnHandler);
         }
             
-        // Запуск анимации
+        // Start animation
         animate();
     })();
 </script>

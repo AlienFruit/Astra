@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Html;
+using Microsoft.AspNetCore.Html;
 using System.Reflection;
 
 namespace AlienFruit.Astra.Abstractions
@@ -6,24 +6,24 @@ namespace AlienFruit.Astra.Abstractions
     public interface IHtmlResourceRenderer
     {
         /// <summary>
-        /// 
+        ///
         /// </summary>
-        /// <param name="name">Можно без расширения</param>
-        /// <param name="path">Путь к втроенному в сборку ресурсу</param>
+        /// <param name="name">Extension can be omitted</param>
+        /// <param name="path">Path to embedded resource in assembly</param>
         void AddScriptResource(string name, string path, AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null);
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
-        /// <param name="name">Можно без расширения</param>
-        /// <param name="path">Путь к втроенному в сборку ресурсу</param>
+        /// <param name="name">Extension can be omitted</param>
+        /// <param name="path">Path to embedded resource in assembly</param>
         void AddStylesheetResource(string name, string path, AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null);
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="resourceName">Использовать имя с расширением, если нужна компрессия</param>
-        /// <param name="jsCode">Java script код</param>
+        /// <param name="resourceName">Use name with extension if compression is needed</param>
+        /// <param name="jsCode">JavaScript code</param>
         void AddJsCode(string resourceName, string jsCode, AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null);
 
         void AddJsCodeFromTemplate<T>(
@@ -40,10 +40,10 @@ namespace AlienFruit.Astra.Abstractions
         IHtmlContent RenderBodyResource(string name);
 
         /// <summary>
-        /// Получает URL ресурса с версионированием
+        /// Gets resource URL with versioning
         /// </summary>
-        /// <param name="resourceName">Имя ресурса</param>
-        /// <returns>URL с параметром версии</returns>
+        /// <param name="resourceName">Resource name</param>
+        /// <returns>URL with version parameter</returns>
         string GetResourceUrl(string resourceName);
     }
 }

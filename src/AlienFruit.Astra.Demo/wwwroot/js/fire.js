@@ -1,16 +1,16 @@
 (function() {
-    console.log('Библиотека огня загружена из внешнего файла fire.js!');
+    console.log('Fire library loaded from external file fire.js!');
 
-    // Глобальные переменные для работы с огнем
+    // Global variables for fire functionality
     window.fireFlames = [];
     window.fireSparks = [];
     window.fireTime = 0;
     window.fireAnimationId = null;
     window.fireResizeHandler = null;
 
-    // Функция очистки всех ресурсов
+    // Function to clean up all resources
     window.fireCleanup = function() {
-        console.log('Очистка ресурсов огня...');
+        console.log('Cleaning up fire resources...');
 
         if (window.fireAnimationId) {
             cancelAnimationFrame(window.fireAnimationId);
@@ -26,7 +26,7 @@
         window.fireSparks.length = 0;
     };
 
-    // Адаптация размера canvas
+    // Canvas size adaptation
     window.fireResizeCanvas = function() {
         const canvas = document.getElementById('waveCanvas');
         if (!canvas) return;
@@ -36,7 +36,7 @@
         canvas.height = Math.min(400, rect.width * 0.5);
     };
 
-    // Класс для языков пламени
+    // Class for flame tongues
     window.Flame = class Flame {
         constructor(x, y) {
             this.x = x;
@@ -47,13 +47,13 @@
             this.vx = (Math.random() - 0.5) * 2;
             this.vy = -2 - Math.random() * 3;
             this.size = 20 + Math.random() * 30;
-            this.hue = 10 + Math.random() * 30; // Оранжевый-желтый
+            this.hue = 10 + Math.random() * 30; // Orange-yellow
         }
 
         update() {
             this.x += this.vx + Math.sin(window.fireTime * 2 + this.y * 0.01) * 0.5;
             this.y += this.vy;
-            this.vy *= 0.98; // Замедление
+            this.vy *= 0.98; // Slowing down
             this.life -= this.decay;
             this.size *= 0.98;
         }
@@ -66,13 +66,13 @@
                 this.x, this.y, this.size
             );
 
-            // Центр - яркий желто-белый
+            // Center - bright yellow-white
             gradient.addColorStop(0, `hsla(${this.hue + 40}, 100%, ${50 + this.life * 50}%, ${this.life * 0.9})`);
-            // Середина - оранжевый
+            // Middle - orange
             gradient.addColorStop(0.4, `hsla(${this.hue}, 100%, ${40 + this.life * 20}%, ${this.life * 0.7})`);
-            // Край - красный
+            // Edge - red
             gradient.addColorStop(0.7, `hsla(${this.hue - 20}, 100%, 40%, ${this.life * 0.4})`);
-            // Внешний край - темно-красный, прозрачный
+            // Outer edge - dark red, transparent
             gradient.addColorStop(1, `hsla(0, 80%, 20%, 0)`);
 
             ctx.fillStyle = gradient;
@@ -84,7 +84,7 @@
         }
     };
 
-    // Класс для искр
+    // Class for sparks
     window.Spark = class Spark {
         constructor(x, y) {
             this.x = x;
@@ -110,7 +110,7 @@
             ctx.save();
             ctx.globalAlpha = this.life;
 
-            // Свечение искры
+            // Spark glow
             const gradient = ctx.createRadialGradient(
                 this.x, this.y, 0,
                 this.x, this.y, this.size * 2
@@ -124,7 +124,7 @@
             ctx.arc(this.x, this.y, this.size * 2, 0, Math.PI * 2);
             ctx.fill();
 
-            // Ядро искры
+            // Spark core
             ctx.fillStyle = 'rgba(255, 255, 200, 1)';
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -135,35 +135,35 @@
         }
     };
 
-    // Функция создания пламени
+    // Function to create flames
     window.fireCreateFlames = function(canvas) {
-        // Создаем новые языки пламени снизу
+        // Create new flame tongues from bottom
         const flameCount = 3 + Math.floor(Math.random() * 3);
         for (let i = 0; i < flameCount; i++) {
             const x = canvas.width * 0.3 + Math.random() * canvas.width * 0.4;
             window.fireFlames.push(new window.Flame(x, canvas.height));
         }
 
-        // Создаем искры
+        // Create sparks
         if (Math.random() > 0.7) {
             const x = canvas.width * 0.35 + Math.random() * canvas.width * 0.3;
             window.fireSparks.push(new window.Spark(x, canvas.height - 10));
         }
     };
 
-    // Функция анимации
+    // Animation function
     window.fireAnimate = function(canvas, ctx) {
-        // Проверка существования элементов
+        // Check if elements exist
         const waveCountElement = document.getElementById('waveCount');
         if (!waveCountElement || !document.contains(canvas)) {
-            console.log('Элементы удалены из DOM, прекращаем анимацию');
+            console.log('Elements removed from DOM, stopping animation');
             window.fireCleanup();
             return;
         }
 
         window.fireTime += 0.05;
 
-        // Создаем фон с градиентом (темный внизу, еще темнее вверху)
+        // Create background with gradient (dark at bottom, even darker at top)
         const bgGradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
         bgGradient.addColorStop(0, 'rgba(10, 5, 5, 1)');
         bgGradient.addColorStop(0.5, 'rgba(5, 2, 2, 1)');
@@ -171,7 +171,7 @@
         ctx.fillStyle = bgGradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Обновляем и рисуем языки пламени
+        // Update and draw flame tongues
         for (let i = window.fireFlames.length - 1; i >= 0; i--) {
             const flame = window.fireFlames[i];
             flame.update();
@@ -180,7 +180,7 @@
             }
         }
 
-        // Обновляем и рисуем искры
+        // Update and draw sparks
         for (let i = window.fireSparks.length - 1; i >= 0; i--) {
             const spark = window.fireSparks[i];
             spark.update();
@@ -189,10 +189,10 @@
             }
         }
 
-        // Создаем новые языки пламени
+        // Create new flame tongues
         window.fireCreateFlames(canvas);
 
-        // Добавляем свечение внизу
+        // Add glow at bottom
         const glowGradient = ctx.createRadialGradient(
             canvas.width / 2, canvas.height, 0,
             canvas.width / 2, canvas.height, canvas.height * 0.6
@@ -203,11 +203,11 @@
         ctx.fillStyle = glowGradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Обновление счетчика
+        // Update counter
         waveCountElement.textContent = window.fireFlames.length + window.fireSparks.length;
 
         window.fireAnimationId = requestAnimationFrame(() => window.fireAnimate(canvas, ctx));
     };
 
-    console.log('Библиотека огня готова к использованию!');
+    console.log('Fire library ready to use!');
 })();

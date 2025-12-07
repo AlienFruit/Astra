@@ -1,14 +1,14 @@
-# Версионирование ресурсов в AlienFruit.Astra
+# Resource Versioning in AlienFruit.Astra
 
-## Обзор
+## Overview
 
-AlienFruit.Astra теперь поддерживает версионирование ресурсов для кэш-бастинга, аналогично механизму `asp-append-version` в ASP.NET Core.
+AlienFruit.Astra now supports resource versioning for cache busting, similar to the `asp-append-version` mechanism in ASP.NET Core.
 
-## Конфигурация
+## Configuration
 
-### Включение версионирования
+### Enabling Versioning
 
-Добавьте в `appsettings.json`:
+Add to `appsettings.json`:
 
 ```json
 {
@@ -21,19 +21,19 @@ AlienFruit.Astra теперь поддерживает версионирова�
 }
 ```
 
-### Параметры конфигурации
+### Configuration Parameters
 
-- `EnableVersioning` (bool) - включает/выключает версионирование
-- `ResourceVersion` (string) - глобальная версия для всех ресурсов (опционально)
+- `EnableVersioning` (bool) - enables/disables versioning
+- `ResourceVersion` (string) - global version for all resources (optional)
 
-## Способы использования
+## Usage Methods
 
-### 1. Автоматическое версионирование в RenderHeaders()
+### 1. Automatic Versioning in RenderHeaders()
 
-При включенном версионировании все ресурсы в `RenderHeaders()` автоматически получают параметр версии:
+When versioning is enabled, all resources in `RenderHeaders()` automatically receive version parameter:
 
 ```csharp
-// В контроллере или сервисе
+// In controller or service
 htmlResourceRenderer.AddStylesheetResource("my-style", "path/to/style.css");
 htmlResourceRenderer.AddScriptResource("my-script", "path/to/script.js");
 
@@ -41,15 +41,15 @@ htmlResourceRenderer.AddScriptResource("my-script", "path/to/script.js");
 @resourceResolver.RenderHeader()
 ```
 
-Результат:
+Result:
 ```html
 <link href="/astra/my-style?v=abc12345" rel="stylesheet" type="text/css" />
 <script src="/astra/my-script?v=def67890"></script>
 ```
 
-### 2. Использование Tag Helper
+### 2. Using Tag Helper
 
-Создайте Tag Helper для удобного использования в Razor views:
+Create a Tag Helper for convenient use in Razor views:
 
 ```html
 <!-- В Razor view -->
@@ -57,10 +57,10 @@ htmlResourceRenderer.AddScriptResource("my-script", "path/to/script.js");
 <astra-script src="my-script"></astra-script>
 ```
 
-### 3. Программное получение URL
+### 3. Programmatic URL Retrieval
 
 ```csharp
-// В контроллере
+// In controller
 public class HomeController : Controller
 {
     private readonly IAstraResourceUrlHelper _urlHelper;
@@ -79,39 +79,39 @@ public class HomeController : Controller
 }
 ```
 
-## Алгоритм версионирования
+## Versioning Algorithm
 
-1. **Глобальная версия**: Если указан `ResourceVersion`, используется он
-2. **Хеш содержимого**: Если глобальная версия не указана, вычисляется SHA256 хеш содержимого ресурса
-3. **Fallback**: При ошибке вычисления хеша используется временная метка
+1. **Global version**: If `ResourceVersion` is specified, it is used
+2. **Content hash**: If global version is not specified, SHA256 hash of resource content is calculated
+3. **Fallback**: On hash calculation error, timestamp is used
 
-## Интеграция с ASP.NET Core
+## ASP.NET Core Integration
 
-### Регистрация сервисов
+### Service Registration
 
 ```csharp
 // В Program.cs
 builder.AddAstra();
 
-// В конфигурации маршрутов
+// In route configuration
 app.UseAstra();
 ```
 
-### Использование вместе с asp-append-version
+### Using Together with asp-append-version
 
-Вы можете использовать оба механизма одновременно:
+You can use both mechanisms simultaneously:
 
 ```html
-<!-- Статические файлы с asp-append-version -->
+<!-- Static files with asp-append-version -->
 <link href="~/css/site.css" asp-append-version="true" />
 
-<!-- Astra ресурсы с автоматическим версионированием -->
+<!-- Astra resources with automatic versioning -->
 @resourceResolver.RenderHeader()
 ```
 
-## Примеры
+## Examples
 
-### Полный пример контроллера
+### Complete Controller Example
 
 ```csharp
 public class DemoController : Controller
@@ -122,7 +122,7 @@ public class DemoController : Controller
     {
         _resourceRenderer = resourceRenderer;
         
-        // Регистрируем ресурсы
+        // Register resources
         _resourceRenderer.AddStylesheetResource("demo-style", "Demo.Resources.style.css");
         _resourceRenderer.AddScriptResource("demo-script", "Demo.Resources.script.js");
     }
@@ -141,31 +141,31 @@ public class DemoController : Controller
     ViewData["Title"] = "Demo";
 }
 
-<!-- Использование Tag Helper -->
+<!-- Using Tag Helper -->
 <astra-style href="demo-style"></astra-style>
 <astra-script src="demo-script"></astra-script>
 
-<!-- Или через RenderHeader() -->
+<!-- Or via RenderHeader() -->
 @resourceResolver.RenderHeader()
 
 <div id="demo-content">
-    <h1>Демонстрация версионирования</h1>
-    <button id="demo-button">Нажми меня</button>
+    <h1>Versioning Demonstration</h1>
+    <button id="demo-button">Click me</button>
 </div>
 ```
 
-## Преимущества
+## Advantages
 
-1. **Автоматический кэш-бастинг**: При изменении содержимого ресурса URL автоматически обновляется
-2. **Производительность**: Хеши вычисляются один раз при регистрации ресурса
-3. **Гибкость**: Поддержка как глобальной версии, так и индивидуальных хешей
-4. **Совместимость**: Работает вместе с существующими механизмами ASP.NET Core
-5. **Простота использования**: Минимальные изменения в существующем коде
+1. **Automatic cache busting**: When resource content changes, URL is automatically updated
+2. **Performance**: Hashes are calculated once during resource registration
+3. **Flexibility**: Support for both global version and individual hashes
+4. **Compatibility**: Works together with existing ASP.NET Core mechanisms
+5. **Ease of use**: Minimal changes to existing code
 
-## Миграция
+## Migration
 
-Для добавления версионирования к существующему коду:
+To add versioning to existing code:
 
-1. Добавьте `EnableVersioning: true` в конфигурацию
-2. Существующие вызовы `RenderHeader()` автоматически получат версионирование
-3. При необходимости добавьте Tag Helper для более удобного использования 
+1. Add `EnableVersioning: true` to configuration
+2. Existing `RenderHeader()` calls will automatically receive versioning
+3. Optionally add Tag Helper for more convenient usage 

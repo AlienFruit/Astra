@@ -14,17 +14,17 @@ namespace AlienFruit.Astra.Demo.Controllers
             var html = @"
 <div class=""card"">
     <div class=""card-header bg-primary text-white"">
-        <h3 class=""mb-0"">Tab 1 - Первый контент</h3>
+        <h3 class=""mb-0"">Tab 1 - First Content</h3>
     </div>
     <div class=""card-body"">
-        <h5 class=""card-title"">Добро пожаловать на первую вкладку!</h5>
+        <h5 class=""card-title"">Welcome to the first tab!</h5>
         <p class=""card-text"">
-            Это первый пример динамически загружаемого контента. Контент загружается без изменения адреса в браузере.
+            This is the first example of dynamically loaded content. Content loads without changing the browser address.
         </p>
         <ul class=""list-group list-group-flush"">
-            <li class=""list-group-item"">Элемент списка 1</li>
-            <li class=""list-group-item"">Элемент списка 2</li>
-            <li class=""list-group-item"">Элемент списка 3</li>
+            <li class=""list-group-item"">List item 1</li>
+            <li class=""list-group-item"">List item 2</li>
+            <li class=""list-group-item"">List item 3</li>
         </ul>
     </div>
 </div>";
@@ -33,13 +33,13 @@ namespace AlienFruit.Astra.Demo.Controllers
 
         public IActionResult Tab2()
         {
-            // Этот контент загружается из View файла Tab2.cshtml
+            // This content is loaded from Tab2.cshtml view file
             return View();
         }
 
         public IActionResult Tab3()
         {
-            // Этот контент загружается из View файла Tab3.cshtml
+            // This content is loaded from Tab3.cshtml view file
             return View();
         }
     }

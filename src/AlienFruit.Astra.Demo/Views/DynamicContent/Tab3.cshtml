@@ -1,54 +1,54 @@
 <div class="card">
     <div class="card-header bg-warning text-dark">
-        <h3 class="mb-0">Tab 3 - Третий контент</h3>
+        <h3 class="mb-0">Tab 3 - Third Content</h3>
     </div>
     <div class="card-body">
-        <h5 class="card-title">Третья вкладка загружена!</h5>
+        <h5 class="card-title">Third tab loaded!</h5>
         <p class="card-text">
-            Это третий пример динамически загружаемого контента. Все переходы происходят без перезагрузки страницы и без изменения адреса в браузере.
+            This is the third example of dynamically loaded content. All transitions happen without page reload and without changing the browser address.
         </p>
         <div class="alert alert-success">
-            <strong>Успешно!</strong> Контент загружен динамически через view-box.
+            <strong>Success!</strong> Content loaded dynamically via view-box.
         </div>
         <div class="alert alert-info">
-            <strong>Отличие:</strong> Этот контент загружается из View файла (<code>Tab3.cshtml</code>), в отличие от Tab1, который возвращает текстовый контент напрямую из контроллера.
+            <strong>Difference:</strong> This content is loaded from a View file (<code>Tab3.cshtml</code>), unlike Tab1 which returns text content directly from the controller.
         </div>
         <div class="alert alert-warning">
-            <strong>Важно!</strong> Адрес в браузере остался прежним благодаря параметру <code>changing-browser-address-enable="false"</code>.
+            <strong>Important!</strong> The browser address remained the same thanks to the <code>changing-browser-address-enable="false"</code> parameter.
         </div>
 
         <div class="alert alert-secondary">
-            <h5><strong>Нюансы реализации через JavaScript:</strong></h5>
-            <p>Эта вкладка загружается не через стандартный <code>&lt;view-box-link&gt;</code>, а через обычный HTML элемент с обработчиком событий JavaScript.</p>
-            <p><strong>Когда рекомендуется использовать JS-вариант:</strong></p>
+            <h5><strong>JavaScript Implementation Details:</strong></h5>
+            <p>This tab is loaded not through the standard <code>&lt;view-box-link&gt;</code>, but through a regular HTML element with JavaScript event handler.</p>
+            <p><strong>When to use the JS variant:</strong></p>
             <ul>
-                <li>Нужен полный контроль над внешним видом и поведением элемента управления</li>
-                <li>Необходима интеграция с существующими JavaScript фреймворками (React, Vue, Angular)</li>
-                <li>Требуется добавить дополнительную логику перед отправкой запроса (валидация, подтверждение)</li>
-                <li>Загрузка контента должна происходить программно из любого места кода</li>
-                <li>Элемент управления не является ссылкой (кнопки, формы, кастомные компоненты)</li>
+                <li>Full control over appearance and behavior of the control element is needed</li>
+                <li>Integration with existing JavaScript frameworks (React, Vue, Angular) is required</li>
+                <li>Additional logic before sending request is needed (validation, confirmation)</li>
+                <li>Content loading should happen programmatically from any code location</li>
+                <li>Control element is not a link (buttons, forms, custom components)</li>
             </ul>
-            <p><strong>Пример реализации:</strong></p>
+            <p><strong>Implementation Example:</strong></p>
             <pre><code>&lt;div id="dynamic-tab3-link"
     class="btn btn-primary"
     onclick="ViewBoxRegistry.sendRequest('dynamic-content-box', '/DynamicContent/Tab3');"&gt;
     Test request from JS
 &lt;/div&gt;</code></pre>
-            <p><strong>Основные методы API:</strong></p>
+            <p><strong>Main API Methods:</strong></p>
             <ul>
-                <li><code>ViewBoxRegistry.sendRequest(viewBoxId, uri)</code> - отправка запроса</li>
-                <li><code>ViewBoxRegistry.abortCurrentRequest(viewBoxId)</code> - отмена текущего запроса</li>
+                <li><code>ViewBoxRegistry.sendRequest(viewBoxId, uri)</code> - send request</li>
+                <li><code>ViewBoxRegistry.abortCurrentRequest(viewBoxId)</code> - cancel current request</li>
             </ul>
-            <p><strong>Параметры методов:</strong></p>
+            <p><strong>Method Parameters:</strong></p>
             <ul>
-                <li><code>viewBoxId</code> - ID целевого view-box элемента</li>
-                <li><code>uri</code> - адрес для загрузки контента</li>
+                <li><code>viewBoxId</code> - ID of target view-box element</li>
+                <li><code>uri</code> - address for content loading</li>
             </ul>
-            <p><strong>Дополнительные возможности:</strong></p>
+            <p><strong>Additional Features:</strong></p>
             <ul>
-                <li>Автоматическая отмена предыдущего запроса при отправке нового</li>
-                <li>Поддержка передачи дополнительных параметров в POST запросах</li>
-                <li>Программная отмена выполняющегося запроса через <code>ViewBoxRegistry.abortCurrentRequest(viewBoxId)</code></li>
+                <li>Automatic cancellation of previous request when sending new one</li>
+                <li>Support for passing additional parameters in POST requests</li>
+                <li>Programmatic cancellation of running request via <code>ViewBoxRegistry.abortCurrentRequest(viewBoxId)</code></li>
             </ul>
         </div>
     </div>

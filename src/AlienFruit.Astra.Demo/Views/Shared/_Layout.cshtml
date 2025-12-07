@@ -1,4 +1,4 @@
-﻿@using AlienFruit.Astra.Core
+@using AlienFruit.Astra.Core
 @using AlienFruit.Astra.Models
 @using System.Reflection
 @inject AstraEngine AstraEngine
@@ -99,7 +99,7 @@
                     path: "AlienFruit.Astra.Demo.Views.Shared.ViewBoxError.html", 
                     assembly: Assembly.GetExecutingAssembly()))>
                 @* or use inmemory resource *@
-                @* connection-error-message-resource="@(new InMemoryResource("connection-error", "Не удалось подключиться к серверу."))"> *@
+                @* connection-error-message-resource="@(new InMemoryResource("connection-error", "Failed to connect to server."))"> *@
                 @RenderBody()
             </view-box>
         </main>

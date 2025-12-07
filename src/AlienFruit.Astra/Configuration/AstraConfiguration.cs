@@ -1,4 +1,4 @@
-﻿namespace AlienFruit.Astra.Configuration
+namespace AlienFruit.Astra.Configuration
 {
     public class AstraConfiguration
     {
@@ -9,18 +9,18 @@
         public string ResourcesRoute { get; set; } = "astra";
 
         /// <summary>
-        /// Включает версионирование ресурсов для кэш-бастинга
+        /// Enables resource versioning for cache busting
         /// </summary>
         public bool EnableVersioning { get; set; } = false;
 
         /// <summary>
-        /// Версия для ресурсов (если не указана, будет использоваться хеш содержимого)
+        /// Version for resources (if not specified, content hash will be used)
         /// </summary>
         public string? ResourceVersion { get; set; }
 
         /// <summary>
-        /// Время кеширования ресурсов в секундах (по умолчанию 1 год)
+        /// Resource cache time in seconds (default is 1 year)
         /// </summary>
-        public int CacheMaxAge { get; set; } = 31536000; // 1 год в секундах
+        public int CacheMaxAge { get; set; } = 31536000; // 1 year in seconds
     }
 }

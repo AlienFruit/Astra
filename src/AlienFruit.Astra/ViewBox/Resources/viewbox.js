@@ -417,4 +417,15 @@ class ViewBoxRegistry {
             document.addEventListener('ViewBoxReady', handler);
         }
     }
+
+    /**
+     * Открывает ссылку в указанном ViewBox.
+     * @param {string} viewBoxId - Идентификатор ViewBox.
+     * @param {string} href - URL для открытия.
+     */
+    static sendRequest(viewBoxId, href) {
+        ViewBoxRegistry.getOrOnReady(viewBoxId, function (viewBox) {
+            viewBox.sendRequest(href);
+        });
+    }
 }

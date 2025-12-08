@@ -7,6 +7,28 @@
     ViewData["Title"] = "Fire Animation Test";
 }
 
+<style>
+    .fire-animation-area {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+        height: 400px;
+        margin: 0;
+        overflow: hidden;
+        background: #0A0B1F;
+        border: 2px solid #dc3545;
+        border-radius: 8px;
+        box-sizing: border-box;
+    }
+
+    .fire-animation-area canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        cursor: none;
+    }
+</style>
+
 <div class="text-center mb-4">
     <h1 class="display-4">Fire Animation JavaScript Test</h1>
     <p class="lead">This page demonstrates dynamic JavaScript loading from external file via view-box.</p>
@@ -18,7 +40,9 @@
     </div>
     <div class="card-body">
         <p>Watch the fire effect on the canvas below. JavaScript is loaded from external file <code>fire.js</code>.</p>
-        <canvas id="waveCanvas" width="800" height="400" style="border: 2px solid #dc3545; border-radius: 8px; width: 100%; max-width: 800px; height: auto; background: #000000;"></canvas>
+        <div class="fire-animation-area">
+            <canvas id="waveCanvas"></canvas>
+        </div>
         <div class="mt-3">
             <span>Active elements: <strong id="waveCount">0</strong></span>
         </div>
@@ -42,19 +66,5 @@
 <script src="~/js/fire.js" asp-append-version="true"></script>
 
 <script>
-    console.log('Initializing fire effect on page...');
-    const canvas = document.getElementById('waveCanvas');
-    if (canvas) {
-        const ctx = canvas.getContext('2d');
-
-        // Set up canvas size
-        window.fireResizeCanvas();
-        window.fireResizeHandler = window.fireResizeCanvas;
-        window.addEventListener('resize', window.fireResizeHandler);
-
-        // Start animation
-        window.fireAnimate(canvas, ctx);
-    } else {
-        console.error('Canvas element not found!');
-    }
+     window.startFireAnimation('waveCanvas', 'waveCount');
 </script>

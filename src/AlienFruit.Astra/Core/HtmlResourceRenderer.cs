@@ -1,10 +1,8 @@
 using AlienFruit.Astra.Abstractions;
 using AlienFruit.Astra.Configuration;
 using Microsoft.AspNetCore.Html;
-using Microsoft.Extensions.Options;
 using Scriban;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -13,7 +11,7 @@ namespace AlienFruit.Astra.Core
 {
     internal class HtmlResourceRenderer(
         IResourceStorage resourceStorage,
-        IOptions<AstraConfiguration> options) : IHtmlResourceRenderer
+        AstraConfiguration configuration) : IHtmlResourceRenderer
     {
         private readonly ConcurrentDictionary<string, AstraResourceLocation> resourceStyles = new();
         private readonly ConcurrentDictionary<string, AstraResourceLocation> resourceScripts = new();
@@ -80,13 +78,13 @@ namespace AlienFruit.Astra.Core
             foreach (var style in this.resourceStyles.Where(x => x.Value == AstraResourceLocation.Header))
             {
                 var version = GetResourceVersion(style.Key);
-                builder.AppendHtmlLine($"<link href=\"/{options.Value.ResourcesRoute}/{style.Key}{version}\" rel=\"stylesheet\" type=\"text/css\" />");
+                builder.AppendHtmlLine($"<link href=\"/{configuration.ResourcesRoute}/{style.Key}{version}\" rel=\"stylesheet\" type=\"text/css\" />");
             }
 
             foreach (var script in this.resourceScripts.Where(x => x.Value == AstraResourceLocation.Header))
             {
                 var version = GetResourceVersion(script.Key);
-                builder.AppendHtmlLine($"<script src=\"/{options.Value.ResourcesRoute}/{script.Key}{version}\"></script>");
+                builder.AppendHtmlLine($"<script src=\"/{configuration.ResourcesRoute}/{script.Key}{version}\"></script>");
             }
 
             return builder;
@@ -117,7 +115,7 @@ namespace AlienFruit.Astra.Core
         public string GetResourceUrl(string resourceName)
         {
             var version = GetResourceVersion(resourceName);
-            return $"/{options.Value.ResourcesRoute}/{resourceName}{version}";
+            return $"/{configuration.ResourcesRoute}/{resourceName}{version}";
         }
 
         private string GetResourceContent(string resourceName)
@@ -134,15 +132,15 @@ namespace AlienFruit.Astra.Core
 
         private string GetResourceVersion(string resourceName)
         {
-            if (!options.Value.EnableVersioning)
+            if (!configuration.EnableVersioning)
             {
                 return string.Empty;
             }
 
             // If global version is specified, use it
-            if (!string.IsNullOrEmpty(options.Value.ResourceVersion))
+            if (!string.IsNullOrEmpty(configuration.ResourceVersion))
             {
-                return $"?v={options.Value.ResourceVersion}";
+                return $"?v={configuration.ResourceVersion}";
             }
 
             // Otherwise use content hash
@@ -156,7 +154,7 @@ namespace AlienFruit.Astra.Core
 
         private void CalculateResourceHash(string resourceName, string? content = null)
         {
-            if (!options.Value.EnableVersioning || string.IsNullOrEmpty(options.Value.ResourceVersion) == false)
+            if (!configuration.EnableVersioning || string.IsNullOrEmpty(configuration.ResourceVersion) == false)
             {
                 return;
             }

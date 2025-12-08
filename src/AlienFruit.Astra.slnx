@@ -1,4 +1,4 @@
 <Solution>
-  <Project Path="AlienFruit.Astra/AlienFruit.Astra.csproj" />
   <Project Path="AlienFruit.Astra.Demo/AlienFruit.Astra.Demo.csproj" />
+  <Project Path="AlienFruit.Astra/AlienFruit.Astra.csproj" />
 </Solution>

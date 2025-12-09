@@ -39,6 +39,7 @@
     <EmbeddedResource Include="ViewBoxLink\Resources\viewboxlink-init-script.template.js" />
     <EmbeddedResource Include="ViewBox\Resources\viewbox-init-script.template.js" />
     <EmbeddedResource Include="ViewBox\Resources\viewbox.js" />
+    <EmbeddedResource Include="ViewBox\Resources\ViewBoxError.html" />
   </ItemGroup>
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />

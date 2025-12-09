@@ -58,9 +58,12 @@ In `_ViewStart.cshtml`:
 @using AlienFruit.Astra.Core
 @inject AstraEngine AstraEngine
 @{
+    @AstraEngine.IncompleteLoadCheck()
     Layout = AstraEngine.RouteLayout(Context, "_Layout");
 }
 ```
+
+**Важно:** Строка `@AstraEngine.IncompleteLoadCheck()` обеспечивает механизм защиты от неполной загрузки ресурсов. Эта функция добавляет JavaScript код, который проверяет наличие специального мета-тега после загрузки DOM. Если мета-тег отсутствует (что может произойти при асинхронной загрузке ресурсов), страница автоматически перезагружается для корректного отображения.
 
 ### 4. Use in Razor Layout
 

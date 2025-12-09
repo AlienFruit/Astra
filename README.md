@@ -8,6 +8,8 @@ AlienFruit.Astra is a powerful .NET library designed to enhance ASP.NET MVC appl
 
 *   **Dynamic Content Loading:** Load partial views or content blocks dynamically without reloading the entire page.
 *   **AJAX Navigation:** Navigate between pages using AJAX, improving performance and user experience.
+*   **Nested ViewBoxes:** Create hierarchical UI structures with multiple independent dynamic content areas.
+*   **JavaScript API:** Programmatically control view-boxes from client-side code for advanced interactions.
 *   **Resource Management:** Efficiently manage JavaScript and CSS resources, preventing duplicates and ensuring proper loading.
 *   **ViewBox Integration:** Integrate with the ViewBox pattern for isolated and reusable UI components.
 *   **Highly Customizable:** Easily configure the library to fit your application's specific needs.
@@ -170,6 +172,61 @@ public class DatabaseResource(string name, string query, IDbConnection connectio
 - This allows updating only part of the page (view-box content), preserving navigation, header, footer, and other static elements
 - This way, smooth SPA-like navigation is achieved without reloading the entire page
 
+### 4.1. Nested ViewBoxes
+
+AlienFruit.Astra supports hierarchical view-box structures, allowing you to create nested dynamic content areas. This enables complex UI layouts where different parts of the page can be updated independently.
+
+**How nested view-boxes work:**
+- Child view-boxes can be placed inside parent view-boxes
+- Each view-box maintains its own loading state and content
+- Navigation can target specific view-boxes within the hierarchy
+- Parent-child relationships are established using the `parent-view-box-id` parameter
+
+**Example of nested view-boxes:**
+
+```html
+<!-- Parent view-box in _Layout.cshtml -->
+<view-box id="main-view-box1" class="pb-3" role="main">
+    @RenderBody()
+</view-box>
+```
+
+```html
+<!-- Child view-box in a page view (like DynamicContent/Index.cshtml) -->
+<view-box id="dynamic-content-box"
+    parent-view-box-id="main-view-box1"
+    class="pb-3"
+    role="main"
+    changing-browser-address-enable="false">
+    <div class="alert alert-info">
+        <h4>Select a tab to load content</h4>
+    </div>
+</view-box>
+```
+
+**Benefits of nested view-boxes:**
+- **Modular UI:** Create complex interfaces with multiple independent content areas
+- **Selective Updates:** Update specific sections without affecting others
+- **Tab Interfaces:** Perfect for tabbed content, dashboards, and multi-panel layouts
+- **Independent Loading:** Each view-box can show its own loading states and error messages
+
+**Using view-box-link with nested structures:**
+```html
+<view-box-link id="tab1-link"
+    default-class-name="btn btn-primary"
+    selected-class-name="btn btn-primary active"
+    view-box-id="dynamic-content-box"
+    uri="/DynamicContent/Tab1">
+    Tab 1
+</view-box-link>
+```
+
+**Important notes:**
+- The `parent-view-box-id` parameter must reference an existing view-box ID
+- Child view-boxes inherit the error handling and resource management of their parent
+- JavaScript functions (on-finish-loading, etc.) work independently for each view-box
+- Browser address changes can be controlled per view-box using `changing-browser-address-enable`
+
 ### 5. Add Dynamic Links to _Layout.cshtml (for example, for menu items)
 
 To create a dynamic link that loads content without a full page refresh, use the `<view-box-link>` tag:
@@ -197,6 +254,80 @@ To create a dynamic link that loads content without a full page refresh, use the
 | `tag-name` | `string` | ❌ No | HTML tag name to use instead of `<a>` | `"a"` |
 | `on-click-js-function` | `string` | ❌ No | Name of the JavaScript function to be called when the link is clicked | `null` |
 | `scroll-up` | `bool` | ❌ No | Determines whether the page should scroll up after content loading | `true` |
+
+### 5.1. JavaScript API for Programmatic Control
+
+AlienFruit.Astra provides a JavaScript API that allows you to programmatically control view-boxes from your client-side code. This is useful for creating custom interactions, handling complex UI logic, or integrating with other JavaScript frameworks.
+
+**ViewBoxRegistry.sendRequest() method:**
+
+The `ViewBoxRegistry.sendRequest()` method allows you to dynamically load content into a specific view-box by sending an AJAX request:
+
+```javascript
+ViewBoxRegistry.sendRequest(viewBoxId, uri);
+```
+
+**Parameters:**
+- `viewBoxId` (string): The ID of the target view-box container
+- `uri` (string): The URI address of the page to navigate to
+
+**Example usage in HTML:**
+```html
+<div id="dynamic-tab3-link"
+    class="btn btn-primary"
+    onclick="ViewBoxRegistry.sendRequest('dynamic-content-box', '/DynamicContent/Tab3');">
+    Test request from JS
+</div>
+```
+
+**Example usage in JavaScript:**
+```javascript
+// Load content into main view-box
+ViewBoxRegistry.sendRequest('main-view-box1', '/Home/About');
+
+// Load tab content dynamically
+ViewBoxRegistry.sendRequest('dynamic-content-box', '/DynamicContent/Tab1');
+```
+
+**ViewBoxRegistry.abortCurrentRequest() method:**
+
+Cancels the currently running request in a specific view-box:
+
+```javascript
+ViewBoxRegistry.abortCurrentRequest(viewBoxId);
+```
+
+**Parameters:**
+- `viewBoxId` (string): The ID of the target view-box container
+
+**Returns:**
+- `boolean`: `true` if the request was successfully cancelled, `false` if there was no active request
+
+**Benefits of programmatic control:**
+- **Custom Interactions:** Create complex UI behaviors that go beyond simple links
+- **Dynamic Content:** Load content based on user actions, form submissions, or application state
+- **Integration:** Easily integrate with other JavaScript libraries and frameworks
+- **Conditional Loading:** Load content based on business logic or user permissions
+- **Request Cancellation:** Ability to cancel ongoing requests when needed
+
+**Available JavaScript methods:**
+- `ViewBoxRegistry.sendRequest(viewBoxId, uri)` - Load content into a view-box
+- `ViewBoxRegistry.abortCurrentRequest(viewBoxId)` - Cancel current request in a view-box
+
+**Additional ViewBoxRegistry methods:**
+- `ViewBoxRegistry.create(id, specification)` - Create a new ViewBox instance
+- `ViewBoxRegistry.getOrCreate(id, specification)` - Get or create a ViewBox instance
+- `ViewBoxRegistry.get(id)` - Get an existing ViewBox instance
+- `ViewBoxRegistry.isCreated(id)` - Check if ViewBox exists
+- `ViewBoxRegistry.destroy(id)` - Destroy a ViewBox instance
+- `ViewBoxRegistry.destroyAll()` - Destroy all ViewBox instances
+- `ViewBoxRegistry.getOrOnReady(id, callback)` - Get ViewBox or call callback when ready
+
+**Important notes:**
+- If the view-box doesn't exist when calling `sendRequest()`, it will wait for the view-box to be created before executing the request
+- If the view-box doesn't exist when calling `abortCurrentRequest()`, the method will return `false`
+- All the same loading events and error handling apply as with view-box-link elements
+- JavaScript API calls respect the same configuration settings (address changes, loading delays, etc.)
 
 ### 6. Resource Management
 

@@ -10,11 +10,22 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AlienFruit.Astra.DependencyInjection
 {
+    /// <summary>
+    /// Provides extension methods for registering AlienFruit.Astra services in ASP.NET Core applications.
+    /// Contains methods for adding services to the dependency injection container and configuring endpoints.
+    /// </summary>
     public static class AstraRegistration
     {
         private const string CacheControlHeader = "Cache-Control";
         private const string ExpiresHeader = "Expires";
 
+        /// <summary>
+        /// Adds AlienFruit.Astra services to the dependency injection container.
+        /// Registers all necessary services including resource management, compression, and the main AstraEngine.
+        /// </summary>
+        /// <param name="builder">The web application builder to add services to.</param>
+        /// <param name="configureOptions">Optional action to configure Astra options. If not provided, configuration will be read from appsettings.json.</param>
+        /// <returns>The modified web application builder for method chaining.</returns>
         public static WebApplicationBuilder AddAstra(this WebApplicationBuilder builder, Action<AstraConfiguration>? configureOptions = null)
         {
             var section = builder.Configuration.GetSection(AstraConfiguration.Name);
@@ -40,6 +51,13 @@ namespace AlienFruit.Astra.DependencyInjection
             return builder;
         }
 
+        /// <summary>
+        /// Configures the endpoint routing for serving Astra resources (CSS/JS files).
+        /// Maps GET requests to the configured resources route for serving compressed and cached resources.
+        /// </summary>
+        /// <param name="app">The endpoint route builder to configure.</param>
+        /// <returns>The modified endpoint route builder for method chaining.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when AstraConfiguration is not registered in the service container.</exception>
         public static IEndpointRouteBuilder UseAstra(this IEndpointRouteBuilder app)
         {
             var configuration = app.ServiceProvider.GetService<AstraConfiguration>()

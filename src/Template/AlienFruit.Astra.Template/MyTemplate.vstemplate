@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005" Type="Project">
+  <TemplateData>
+    <Name>AlienFruit.Astra Web App</Name>
+    <Description>A web application template using AlienFruit.Astra for dynamic content loading</Description>
+    <ProjectType>CSharp</ProjectType>
+    <ProjectSubType>Web</ProjectSubType>
+    <SortOrder>1000</SortOrder>
+    <CreateNewFolder>true</CreateNewFolder>
+    <DefaultName>AstraWebApp</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+    <LocationField>Enabled</LocationField>
+    <EnableLocationBrowseButton>true</EnableLocationBrowseButton>
+    <Icon>__TemplateIcon.ico</Icon>
+    <PreviewImage>__PreviewImage.png</PreviewImage>
+    <TemplateID>AlienFruit.Astra.Template</TemplateID>
+    <RequiredFrameworkVersion>8.0</RequiredFrameworkVersion>
+  </TemplateData>
+  <TemplateContent>
+    <Project TargetFileName="AstraTemplate.csproj" File="AstraTemplate.csproj" ReplaceParameters="true">
+      <Folder Name="Controllers" TargetFolderName="Controllers">
+        <ProjectItem TargetFileName="HomeController.cs" ReplaceParameters="true">Controllers\HomeController.cs</ProjectItem>
+      </Folder>
+      <Folder Name="Models" TargetFolderName="Models">
+        <ProjectItem TargetFileName="ErrorViewModel.cs" ReplaceParameters="true">Models\ErrorViewModel.cs</ProjectItem>
+      </Folder>
+      <Folder Name="Views" TargetFolderName="Views">
+        <ProjectItem TargetFileName="_ViewImports.cshtml" ReplaceParameters="true">Views\_ViewImports.cshtml</ProjectItem>
+        <ProjectItem TargetFileName="_ViewStart.cshtml" ReplaceParameters="true">Views\_ViewStart.cshtml</ProjectItem>
+        <Folder Name="Home" TargetFolderName="Views\Home">
+          <ProjectItem TargetFileName="Index.cshtml" ReplaceParameters="true">Views\Home\Index.cshtml</ProjectItem>
+          <ProjectItem TargetFileName="Privacy.cshtml" ReplaceParameters="true">Views\Home\Privacy.cshtml</ProjectItem>
+        </Folder>
+        <Folder Name="Shared" TargetFolderName="Views\Shared">
+          <ProjectItem TargetFileName="_Layout.cshtml" ReplaceParameters="true">Views\Shared\_Layout.cshtml</ProjectItem>
+          <ProjectItem TargetFileName="Error.cshtml" ReplaceParameters="true">Views\Shared\Error.cshtml</ProjectItem>
+        </Folder>
+      </Folder>
+      <Folder Name="wwwroot" TargetFolderName="wwwroot">
+        <Folder Name="css" TargetFolderName="wwwroot\css">
+          <ProjectItem TargetFileName="site.css">wwwroot\css\site.css</ProjectItem>
+        </Folder>
+        <Folder Name="js" TargetFolderName="wwwroot\js">
+          <ProjectItem TargetFileName="site.js">wwwroot\js\site.js</ProjectItem>
+        </Folder>
+      </Folder>
+      <Folder Name="Properties" TargetFolderName="Properties">
+        <ProjectItem TargetFileName="launchSettings.json">Properties\launchSettings.json</ProjectItem>
+      </Folder>
+      <ProjectItem TargetFileName="Program.cs" ReplaceParameters="true">Program.cs</ProjectItem>
+      <ProjectItem TargetFileName="appsettings.json">appsettings.json</ProjectItem>
+    </Project>
+  </TemplateContent>
+  <WizardExtension>
+    <Assembly>Microsoft.VisualStudio.Web.ProjectSystem.VSWebProjectSystem, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+    <FullClassName>Microsoft.VisualStudio.Web.ProjectSystem.VSWebProjectSystem.TemplateProjectWizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

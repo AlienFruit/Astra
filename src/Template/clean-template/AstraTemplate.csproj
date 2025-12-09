@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>$ext_safeprojectname$</RootNamespace>
+    <AssemblyName>$ext_safeprojectname$</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AlienFruit.Astra" Version="1.0.0" />
+  </ItemGroup>
+
+</Project>

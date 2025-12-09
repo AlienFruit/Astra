@@ -25,6 +25,10 @@
     <LangVersion>latest</LangVersion>
     <PackageIcon>logo-icon-github.png</PackageIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="AlienFruit.Astra.Tests" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Remove="Middlewares\**" />
     <EmbeddedResource Remove="Middlewares\**" />

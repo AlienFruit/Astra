@@ -30,7 +30,7 @@ dotnet add package AlienFruit.Astra
 
 ### Basic Setup
 
-1.  **Register services** in your `Program.cs`:
+### 1.  **Register services** in your `Program.cs`:
 
 ```csharp
     var builder = WebApplication.CreateBuilder(args);
@@ -40,7 +40,7 @@ dotnet add package AlienFruit.Astra
     builder.AddAstra();
 ```
 
-2.  **Add the Astra middleware** to your application's request pipeline:
+### 2.  **Add the Astra middleware** to your application's request pipeline:
 
 ```csharp
     var app = builder.Build();
@@ -58,7 +58,7 @@ In `_ViewImports.cshtml`:
 @addTagHelper *, AlienFruit.Astra
 ```
 
-**Что делает эта директива:** Регистрирует все Tag Helpers из сборки AlienFruit.Astra, что позволяет использовать специальные HTML-теги `<view-box>` и `<view-box-link>` в ваших Razor представлениях для создания динамических компонентов интерфейса.
+**What this directive does:** Registers all Tag Helpers from the AlienFruit.Astra assembly, allowing you to use special HTML tags `<view-box>` and `<view-box-link>` in your Razor views to create dynamic UI components.
 
 ---
 
@@ -73,17 +73,17 @@ In `_ViewStart.cshtml`:
 }
 ```
 
-**Что делают эти директивы:**
-- `@using AlienFruit.Astra.Core` - импортирует пространство имен для доступа к классам Astra
-- `@inject AstraEngine AstraEngine` - внедряет экземпляр AstraEngine в представление для управления динамической загрузкой
-- `@AstraEngine.IncompleteLoadCheck()` - добавляет JavaScript код для защиты от неполной загрузки ресурсов при восстановлении страницы из истории браузера
-- `Layout = AstraEngine.RouteLayout(Context, "_Layout")` - динамически определяет layout страницы через AstraEngine вместо статического присваивания
+**What these directives do:**
+- `@using AlienFruit.Astra.Core` - imports the namespace for accessing Astra classes
+- `@inject AstraEngine AstraEngine` - injects an AstraEngine instance into the view for managing dynamic loading
+- `@AstraEngine.IncompleteLoadCheck()` - adds JavaScript code to protect against incomplete resource loading when restoring pages from browser history
+- `Layout = AstraEngine.RouteLayout(Context, "_Layout")` - dynamically determines the page layout through AstraEngine instead of static assignment
 
-**Важно:** Строка `@AstraEngine.IncompleteLoadCheck()` обеспечивает механизм защиты от неполной загрузки ресурсов. Эта функция добавляет JavaScript код, который проверяет наличие специального мета-тега после загрузки DOM. Это необходимо на тот случай, когда страница восстанавливается из истории при открыти браузера.
+**Important:** The `@AstraEngine.IncompleteLoadCheck()` line provides protection against incomplete resource loading. This function adds JavaScript code that checks for the presence of a special meta tag after DOM loading. This is necessary in case a page is restored from history when opening the browser.
 
-### 4. ViewBox Example
+### 4. Add ViewBox to _Layout.cshtml
 
-Тег `<view-box>` представляет собой контейнер для динамического контента страницы. Он предназначен для размещения содержимого, которое может загружаться асинхронно без полной перезагрузки страницы:
+The `<view-box>` tag is a container for dynamic page content. It is designed to hold content that can be loaded asynchronously without a full page reload:
 
 ```html
 <view-box id="main-view-box1"
@@ -97,29 +97,29 @@ In `_ViewStart.cshtml`:
 
 **Параметры view-box:**
 
-| Параметр | Тип | Обязательный | Описание | Значение по умолчанию |
-|-----------|-----|-------------|----------|---------------------|
-| `id` | `string` | ✅ Да | Уникальный идентификатор view-box контейнера. Используется для связи с view-box-link элементами и для JavaScript взаимодействия | - |
-| `connection-error-message-resource` | `Resource` | ❌ Нет | Ресурс, содержащий сообщение об ошибке соединения, которое будет отображаться при проблемах с загрузкой. Поддерживаются `EmbeddedResource` и `InMemoryResource` типы ресурсов | Встроенный ресурс с сообщением "Failed to connect to server. Please check your internet connection and try refreshing the page." |
-| `on-start-loading-js-function` | `string` | ❌ Нет | Имя JavaScript функции, которая будет вызвана при начале загрузки контента | `null` |
-| `on-timeout-after-start-loading-js-function` | `string` | ❌ Нет | Имя JavaScript функции, которая будет вызвана при истечении времени ожидания после начала загрузки. Можно использовать для отображения индикатора загрузки | `null` |
-| `on-finish-loading-js-function` | `string` | ❌ Нет | Имя JavaScript функции, которая будет вызвана после успешного завершения загрузки контента. Можно использовать для выполнения дополнительных действий после загрузки | `null` |
-| `on-scripts-executed-js-function` | `string` | ❌ Нет | Имя JavaScript функции, которая будет вызвана после выполнения всех скриптов загруженной страницы | `null` |
-| `start-loading-event-delay` | `int` | ❌ Нет | Задержка в миллисекундах перед вызовом события начала загрузки | `100` |
-| `class` | `string` | ❌ Нет | CSS классы для стилизации контейнера | `null` |
-| `style` | `string` | ❌ Нет | Inline CSS стили для контейнера | `null` |
-| `role` | `string` | ❌ Нет | ARIA роль для обеспечения доступности (accessibility) | `null` |
-| `tag-name` | `string` | ❌ Нет | Имя HTML тега, который будет использоваться вместо `<main>` | `"main"` |
-| `changing-browser-address-enable` | `bool` | ❌ Нет | Включает/отключает изменение URL адреса браузера при навигации | `true` |
-| `parent-view-box-id` | `string` | ❌ Нет | ID родительского view-box контейнера для создания иерархии | `null` |
+| Parameter | Type | Required | Description | Default Value |
+|-----------|------|----------|-------------|---------------|
+| `id` | `string` | ✅ Yes | Unique identifier for the view-box container. Used to link with view-box-link elements and for JavaScript interaction | - |
+| `connection-error-message-resource` | `Resource` | ❌ No | Resource containing a connection error message that will be displayed when loading problems occur. Supports `EmbeddedResource` and `InMemoryResource` resource types | Built-in resource with message "Failed to connect to server. Please check your internet connection and try refreshing the page." |
+| `on-start-loading-js-function` | `string` | ❌ No | Name of the JavaScript function that will be called when content loading starts | `null` |
+| `on-timeout-after-start-loading-js-function` | `string` | ❌ No | Name of the JavaScript function that will be called when the timeout expires after loading starts. Can be used to display a loading indicator | `null` |
+| `on-finish-loading-js-function` | `string` | ❌ No | Name of the JavaScript function that will be called after successful content loading completion. Can be used to perform additional actions after loading | `null` |
+| `on-scripts-executed-js-function` | `string` | ❌ No | Name of the JavaScript function that will be called after all scripts of the loaded page have been executed | `null` |
+| `start-loading-event-delay` | `int` | ❌ No | Delay in milliseconds before calling the loading start event | `100` |
+| `class` | `string` | ❌ No | CSS classes for container styling | `null` |
+| `style` | `string` | ❌ No | Inline CSS styles for the container | `null` |
+| `role` | `string` | ❌ No | ARIA role for accessibility | `null` |
+| `tag-name` | `string` | ❌ No | HTML tag name to use instead of `<main>` | `"main"` |
+| `changing-browser-address-enable` | `bool` | ❌ No | Enables/disables browser URL address change during navigation | `true` |
+| `parent-view-box-id` | `string` | ❌ No | ID of the parent view-box container for creating hierarchy | `null` |
 
-**Подробное описание connection-error-message-resource:**
+**Detailed description of the connection-error-message-resource parameter:**
 
-Параметр `connection-error-message-resource` определяет ресурс, содержащий HTML-сообщение об ошибке, которое будет отображаться в view-box контейнере при проблемах с подключением к серверу (например, при потере интернет-соединения или недоступности сервера).
+The `connection-error-message-resource` parameter defines a resource containing an HTML error message that will be displayed in the view-box container when connection problems occur (for example, when internet connection is lost or the server is unavailable).
 
-**Поддерживаемые типы ресурсов:**
+**Supported resource types:**
 
-1. **`EmbeddedResource`** - для использования встроенных ресурсов из сборки:
+1. **`EmbeddedResource`** - for using embedded resources from the assembly:
 ```csharp
 connection-error-message-resource="@(new EmbeddedResource(
     name: "CustomError.html",
@@ -127,49 +127,50 @@ connection-error-message-resource="@(new EmbeddedResource(
     assembly: typeof(MyController).Assembly))"
 ```
 
-**Параметры EmbeddedResource:**
-- `name` - уникальное имя ресурса для идентификации
-- `path` - полный путь к встроенному ресурсу в формате `Namespace.Folder.FileName.Extension` (manifest resource name)
-- `assembly` - сборка, содержащая встроенный ресурс (обычно `Assembly.GetExecutingAssembly()` или `typeof(SomeClass).Assembly`)
+**EmbeddedResource parameters:**
+- `name` - unique resource name for identification
+- `path` - full path to the embedded resource in the format `Namespace.Folder.FileName.Extension` (manifest resource name)
+- `assembly` - assembly containing the embedded resource (usually `Assembly.GetExecutingAssembly()` or `typeof(SomeClass).Assembly`)
+---
 
-2. **`InMemoryResource`** - для создания ресурса непосредственно в коде:
+2. **`InMemoryResource`** - for creating a resource directly in code:
 ```csharp
 connection-error-message-resource="@(new InMemoryResource(
     "connection-error",
-    "<div class='alert alert-danger'>Не удалось подключиться к серверу. Проверьте подключение к интернету.</div>"))"
+    "<div class='alert alert-danger'>Failed to connect to server. Please check your internet connection.</div>"))"
 ```
-
-3. **Собственная реализация Resource** - для продвинутых сценариев можно создать собственный класс, наследующий абстрактный класс `Resource`:
+---
+3. **Custom Resource implementation** - for advanced scenarios, you can create your own class inheriting from the abstract `Resource` class:
 
 ```csharp
 public class DatabaseResource(string name, string query, IDbConnection connection) : Resource(name)
 {
     public override Stream GetStream()
     {
-        // Получить HTML из базы данных по query
+        // Get HTML from database by query
         var html = GetHtmlFromDatabase(query, connection);
         var bytes = Encoding.UTF8.GetBytes(html);
         return new MemoryStream(bytes);
     }
 }
 ```
+---
+**Usage recommendations:**
+- Use `InMemoryResource` for simple text messages
+- Use `EmbeddedResource` for complex HTML templates with styling
+- HTML content should be valid and secure
+- It is recommended to use CSS classes for styling error messages
 
-**Рекомендации по использованию:**
-- Используйте `InMemoryResource` для простых текстовых сообщений
-- Используйте `EmbeddedResource` для сложных HTML-шаблонов с стилизацией
-- HTML-содержимое должно быть валидным и безопасным
-- Рекомендуется использовать CSS-классы для стилизации сообщений об ошибках
+**What @RenderBody() does:** This Razor method displays the content of a specific page inside the view-box container for standard display of page content using ASP.NET MVC means. For example, when first opening a page by link in the browser or during a full page reload.
 
-**Что делает @RenderBody():** Этот метод Razor отображает содержимое конкретной страницы внутри view-box контейнера для стандартного отображения содержимого страницы средствами ASP.NET MVC. Например, при первом открытии страницы по ссылке в браузере или при полной перезагрузке страницы.
+**Detailed explanation of @RenderBody():**
+- In a standard ASP.NET MVC application, `@RenderBody()` is used in layout files to display page content
+- In the context of AlienFruit.Astra, this method is placed inside the `<view-box>` container
+- When a user navigates via `<view-box-link>`, the target page content is loaded via AJAX request and displayed inside the view-box instead of `@RenderBody()`
+- This allows updating only part of the page (view-box content), preserving navigation, header, footer, and other static elements
+- This way, smooth SPA-like navigation is achieved without reloading the entire page
 
-**Подробное объяснение @RenderBody():**
-- В стандартном ASP.NET MVC приложении `@RenderBody()` используется в layout файлах для отображения содержимого страниц
-- В контексте AlienFruit.Astra этот метод размещается внутри `<view-box>` контейнера
-- Когда пользователь переходит по `<view-box-link>`, содержимое целевой страницы загружается AJAX-запросом и отображается внутри view-box вместо `@RenderBody()`
-- Это позволяет обновлять только часть страницы (содержимое view-box), сохраняя навигацию, header, footer и другие статические элементы
-- Таким образом достигается плавная SPA-подобная навигация без перезагрузки всей страницы
-
-### 5. Dynamic Link Example
+### 5. Add Dynamic Links to _Layout.cshtml (for example, for menu items)
 
 To create a dynamic link that loads content without a full page refresh, use the `<view-box-link>` tag:
 
@@ -183,30 +184,30 @@ To create a dynamic link that loads content without a full page refresh, use the
 </view-box-link>
 ```
 
-**Параметры view-box-link:**
+**view-box-link parameters:**
 
-| Параметр | Тип | Обязательный | Описание | Значение по умолчанию |
-|-----------|-----|-------------|----------|---------------------|
-| `id` | `string` | ✅ Да | Уникальный идентификатор view-box-link элемента | - |
-| `uri` | `string` | ✅ Да | URI адрес страницы, на которую будет осуществлена навигация | - |
-| `view-box-id` | `string` | ✅ Да | ID view-box контейнера, в который будет загружен контент | - |
-| `style` | `string` | ❌ Нет | Inline CSS стили для элемента | `null` |
-| `default-class-name` | `string` | ❌ Нет | CSS классы, применяемые по умолчанию | `null` |
-| `selected-class-name` | `string` | ❌ Нет | CSS классы, применяемые когда ссылка соответствует текущему URL | `null` |
-| `tag-name` | `string` | ❌ Нет | Имя HTML тега, который будет использоваться вместо `<a>` | `"a"` |
-| `on-click-js-function` | `string` | ❌ Нет | Имя JavaScript функции, которая будет вызвана при клике на ссылку | `null` |
-| `scroll-up` | `bool` | ❌ Нет | Определяет, должна ли страница прокручиваться вверх после загрузки контента | `true` |
+| Parameter | Type | Required | Description | Default Value |
+|-----------|------|----------|-------------|---------------|
+| `id` | `string` | ✅ Yes | Unique identifier for the view-box-link element | - |
+| `uri` | `string` | ✅ Yes | URI address of the page to navigate to | - |
+| `view-box-id` | `string` | ✅ Yes | ID of the view-box container where content will be loaded | - |
+| `style` | `string` | ❌ No | Inline CSS styles for the element | `null` |
+| `default-class-name` | `string` | ❌ No | CSS classes applied by default | `null` |
+| `selected-class-name` | `string` | ❌ No | CSS classes applied when the link matches the current URL | `null` |
+| `tag-name` | `string` | ❌ No | HTML tag name to use instead of `<a>` | `"a"` |
+| `on-click-js-function` | `string` | ❌ No | Name of the JavaScript function to be called when the link is clicked | `null` |
+| `scroll-up` | `bool` | ❌ No | Determines whether the page should scroll up after content loading | `true` |
 
 ### 6. Resource Management
 
-**Управление ресурсами** - это важная часть AlienFruit.Astra, которая обеспечивает автоматическое подключение и управление JavaScript и CSS ресурсами. Это необходимо для корректной работы динамической загрузки контента и предотвращения конфликтов ресурсов.
+**Resource Management** - is an important part of AlienFruit.Astra that provides automatic connection and management of JavaScript and CSS resources. This is necessary for the correct operation of dynamic content loading and preventing resource conflicts.
 
-**Для чего это нужно:**
-- **Автоматическое подключение ресурсов:** Astra автоматически подключает необходимые JS/CSS файлы в заголовок HTML страницы
-- **Предотвращение дублирования:** Система отслеживает уже подключенные ресурсы и избегает их повторного включения
-- **Управление версиями:** Ресурсы получают версионные метки для корректного кэширования браузером
-- **Разделение по расположению:** Ресурсы могут быть размещены в `<head>` (Header) или перед закрывающим `</body>` (Body)
-- **Поддержка AJAX навигации:** При динамической загрузке страниц ресурсы подключаются автоматически без перезагрузки
+**Why is this needed:**
+- **Automatic resource connection:** Astra automatically connects the necessary JS/CSS files to the HTML page header
+- **Prevention of duplication:** The system tracks already connected resources and avoids their re-inclusion
+- **Version management:** Resources receive version tags for correct browser caching
+- **Location separation:** Resources can be placed in `<head>` (Header) or before the closing `</body>` (Body)
+- **AJAX navigation support:** When dynamically loading pages, resources are connected automatically without reloading
 
 **Как использовать:**
 
@@ -226,18 +227,18 @@ To create a dynamic link that loads content without a full page refresh, use the
 </html>
 ```
 
-**Что делает `@AstraEngine.RenderHeaders()`:**
-- Подключает основной JavaScript файл `viewbox.js` для работы view-box компонентов
-- Генерирует HTML теги `<link>` для CSS ресурсов
-- Генерирует HTML теги `<script>` для JavaScript ресурсов
-- Добавляет специальный мета-тег `<meta id="load-check">` для защиты от неполной загрузки ресурсов
-- Учитывает версионирование ресурсов для корректного кэширования
+**What `@AstraEngine.RenderHeaders()` does:**
+- Connects the main JavaScript file `viewbox.js` for view-box component operation
+- Generates HTML `<link>` tags for CSS resources
+- Generates HTML `<script>` tags for JavaScript resources
+- Adds a special meta tag `<meta id="load-check">` to protect against incomplete resource loading
+- Considers resource versioning for correct caching
 
 ## 7. Configuration
 
-AlienFruit.Astra предоставляет гибкую систему конфигурации для оптимизации работы с ресурсами и производительности. Большинству пользователей подойдет следующая конфигурация:
+AlienFruit.Astra provides a flexible configuration system for optimizing resource handling and performance. Most users will find the following configuration suitable:
 
-**Рекомендуемая конфигурация для большинства проектов:**
+**Recommended configuration for most projects:**
 
 ```json
 {
@@ -256,24 +257,24 @@ builder.AddAstra(options =>
 {
     options.EnableVersioning = true;
     options.UseCompression = true;
-    options.CacheMaxAge = 86400; // 24 часа
+    options.CacheMaxAge = 86400; // 24 hours
 });
 ```
 
-**Все доступные параметры конфигурации:**
+**All available configuration parameters:**
 
-| Параметр | Тип | Описание | Значение по умолчанию | Рекомендация |
-|-----------|-----|----------|---------------------|-------------|
-| `UseCompression` | `bool` | Включает сжатие ресурсов (GZIP) для уменьшения размера передаваемых данных | `true` | Оставить `true` для production |
-| `ResourcesRoute` | `string` | Путь маршрута для обслуживания ресурсов (CSS/JS файлы) | `"astra"` | Использовать значение по умолчанию |
-| `EnableVersioning` | `bool` | Включает версионирование ресурсов для корректного кэширования браузером | `false` | Установить `true` для production |
-| `ResourceVersion` | `string?` | Фиксированная версия ресурсов (если не указана, используется хэш контента) | `null` | Оставить `null` для автоматического версионирования |
-| `CacheMaxAge` | `int` | Время кэширования ресурсов в секундах (HTTP Cache-Control max-age) | `31536000` (1 год) | `86400` (24 часа) для development, `31536000` для production |
+| Parameter | Type | Description | Default Value | Recommendation |
+|-----------|------|-------------|---------------|---------------|
+| `UseCompression` | `bool` | Enables resource compression (GZIP) to reduce the size of transmitted data | `true` | Keep `true` for production |
+| `ResourcesRoute` | `string` | Route path for serving resources (CSS/JS files) | `"astra"` | Use the default value |
+| `EnableVersioning` | `bool` | Enables resource versioning for correct browser caching | `false` | Set `true` for production |
+| `ResourceVersion` | `string?` | Fixed resource version (if not specified, content hash is used) | `null` | Leave `null` for automatic versioning |
+| `CacheMaxAge` | `int` | Resource caching time in seconds (HTTP Cache-Control max-age) | `31536000` (1 year) | `86400` (24 hours) for development, `31536000` for production |
 
-**Пояснения к параметрам:**
-- **`EnableVersioning = true`** - предотвращает проблемы кэширования при обновлении ресурсов
-- **`UseCompression = true`** - уменьшает размер передаваемых данных
-- **`CacheMaxAge = 86400`** - баланс между производительностью и свежестью контента (24 часа)
+**Parameter explanations:**
+- **`EnableVersioning = true`** - prevents caching issues when updating resources
+- **`UseCompression = true`** - reduces the size of transmitted data
+- **`CacheMaxAge = 86400`** - balance between performance and content freshness (24 hours)
 
 ## Contributing
 

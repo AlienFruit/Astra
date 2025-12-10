@@ -76,17 +76,17 @@ AlienFruit.Astra - это библиотека для ASP.NET Core, котора
 ### 5. Тесты для Resource Management
 
 #### ResourceCompressors
-- [ ] Тесты NuglifyResourceCompressor (если доступен)
-- [ ] Тесты StubCompressor
-- [ ] Тесты компрессии в строку
-- [ ] Тесты компрессии в поток
-- [ ] Тесты обработки разных типов контента
+- [x] Тесты NuglifyResourceCompressor (если доступен)
+- [x] Тесты StubCompressor
+- [x] Тесты компрессии в строку
+- [x] Тесты компрессии в поток
+- [x] Тесты обработки разных типов контента
 
 #### Resource Models
-- [ ] Тесты EmbeddedResource
-- [ ] Тесты InMemoryResource
-- [ ] Тесты пользовательских реализаций Resource
-- [ ] Тесты потоков и асинхронных операций
+- [x] Тесты EmbeddedResource
+- [x] Тесты InMemoryResource
+- [x] Тесты пользовательских реализаций Resource
+- [x] Тесты потоков и асинхронных операций
 
 ### 6. Тесты для Configuration
 

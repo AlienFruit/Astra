@@ -24,7 +24,7 @@ public class ResourceModelsTests
     }
 
     [Fact]
-    public void EmbeddedResource_Constructor_ShouldInitializeProperties()
+    public void Constructor_OnEmbeddedResource_ShouldInitializeProperties()
     {
         // Arrange
         var name = "test-resource.js";
@@ -40,7 +40,7 @@ public class ResourceModelsTests
     }
 
     [Fact]
-    public void EmbeddedResource_GetStream_ShouldReturnManifestResourceStream()
+    public void GetStream_OnEmbeddedResource_ShouldReturnManifestResourceStream()
     {
         // Arrange
         var name = "test-resource.js";
@@ -57,7 +57,7 @@ public class ResourceModelsTests
     }
 
     [Fact]
-    public void EmbeddedResource_GetStream_WithInvalidPath_ShouldThrowKeyNotFoundException()
+    public void GetStream_OnEmbeddedResourceWithInvalidPath_ShouldThrowKeyNotFoundException()
     {
         // Arrange
         var name = "test-resource.js";
@@ -74,7 +74,7 @@ public class ResourceModelsTests
     }
 
     [Fact]
-    public void EmbeddedResource_GetString_ShouldReturnResourceContentAsString()
+    public void GetString_OnEmbeddedResource_ShouldReturnResourceContentAsString()
     {
         // Arrange
         var name = "test-resource.js";
@@ -92,7 +92,7 @@ public class ResourceModelsTests
     }
 
     [Fact]
-    public void InMemoryResource_Constructor_ShouldInitializeProperties()
+    public void Constructor_OnInMemoryResource_ShouldInitializeProperties()
     {
         // Arrange
         var name = "test-resource.html";
@@ -107,7 +107,7 @@ public class ResourceModelsTests
     }
 
     [Fact]
-    public void InMemoryResource_GetStream_ShouldReturnMemoryStreamWithContent()
+    public void GetStream_OnInMemoryResource_ShouldReturnMemoryStreamWithContent()
     {
         // Arrange
         var name = "test-resource.html";
@@ -125,7 +125,7 @@ public class ResourceModelsTests
     }
 
     [Fact]
-    public void InMemoryResource_GetString_ShouldReturnOriginalContent()
+    public void GetString_OnInMemoryResource_ShouldReturnOriginalContent()
     {
         // Arrange
         var name = "test-resource.html";
@@ -140,7 +140,7 @@ public class ResourceModelsTests
     }
 
     [Fact]
-    public void Resource_Name_ShouldBeSetCorrectly()
+    public void Name_OnCustomResource_ShouldBeSetCorrectly()
     {
         // Arrange
         var name = "custom-resource.js";
@@ -153,7 +153,7 @@ public class ResourceModelsTests
     }
 
     [Fact]
-    public void Resource_GetString_CustomImplementation_ShouldWork()
+    public void GetString_OnCustomResource_ShouldWork()
     {
         // Arrange
         var name = "custom-resource.txt";

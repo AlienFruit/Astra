@@ -24,7 +24,7 @@ public class ResourceCompressorsTests
     }
 
     [Fact]
-    public void StubCompressor_CompressToString_ShouldReturnOriginalContent()
+    public void CompressToString_OnStubCompressor_ShouldReturnOriginalContent()
     {
         // Arrange
         var compressor = new StubCompressor();
@@ -38,7 +38,7 @@ public class ResourceCompressorsTests
     }
 
     [Fact]
-    public void StubCompressor_CompressToStream_ShouldReturnOriginalStream()
+    public void CompressToStream_OnStubCompressor_ShouldReturnOriginalStream()
     {
         // Arrange
         var compressor = new StubCompressor();
@@ -55,7 +55,7 @@ public class ResourceCompressorsTests
     }
 
     [Fact]
-    public void NuglifyResourceCompressor_CompressToString_JavaScript_ShouldCompress()
+    public void CompressToString_OnJavaScriptResource_ShouldCompress()
     {
         // Arrange
         var compressor = new NuglifyResourceCompressor();
@@ -70,7 +70,7 @@ public class ResourceCompressorsTests
     }
 
     [Fact]
-    public void NuglifyResourceCompressor_CompressToString_Css_ShouldCompress()
+    public void CompressToString_OnCssResource_ShouldCompress()
     {
         // Arrange
         var compressor = new NuglifyResourceCompressor();
@@ -85,7 +85,7 @@ public class ResourceCompressorsTests
     }
 
     [Fact]
-    public void NuglifyResourceCompressor_CompressToString_Html_ShouldCompress()
+    public void CompressToString_OnHtmlResource_ShouldCompress()
     {
         // Arrange
         var compressor = new NuglifyResourceCompressor();
@@ -103,7 +103,7 @@ public class ResourceCompressorsTests
     }
 
     [Fact]
-    public void NuglifyResourceCompressor_CompressToString_UnknownType_ShouldReturnOriginal()
+    public void CompressToString_OnUnknownResourceType_ShouldReturnOriginal()
     {
         // Arrange
         var compressor = new NuglifyResourceCompressor();

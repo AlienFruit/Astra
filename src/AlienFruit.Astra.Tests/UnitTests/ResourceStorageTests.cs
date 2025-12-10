@@ -85,7 +85,7 @@ public class ResourceStorageTests : AstraTestBase
     }
 
     [Fact]
-    public void Contains_ShouldReturnTrueForExistingResource()
+    public void Contains_ExistingResource_ShouldReturnTrue()
     {
         // Arrange
         var storage = CreateResourceStorage();
@@ -100,7 +100,7 @@ public class ResourceStorageTests : AstraTestBase
     }
 
     [Fact]
-    public void Contains_ShouldReturnFalseForNonExistingResource()
+    public void Contains_NonExistingResource_ShouldReturnFalse()
     {
         // Arrange
         var storage = CreateResourceStorage();
@@ -113,7 +113,7 @@ public class ResourceStorageTests : AstraTestBase
     }
 
     [Fact]
-    public void OpenRead_ShouldReturnCompressedStreamForExistingResource()
+    public void OpenRead_ExistingResource_ShouldReturnCompressedStream()
     {
         // Arrange
         var storage = CreateResourceStorage();
@@ -133,7 +133,7 @@ public class ResourceStorageTests : AstraTestBase
     }
 
     [Fact]
-    public void OpenRead_ShouldThrowExceptionForNonExistingResource()
+    public void OpenRead_NonExistingResource_ShouldThrowException()
     {
         // Arrange
         var storage = CreateResourceStorage();
@@ -144,7 +144,7 @@ public class ResourceStorageTests : AstraTestBase
     }
 
     [Fact]
-    public async Task OpenReadAsync_ShouldReturnCompressedStreamForExistingResource()
+    public async Task OpenReadAsync_ExistingResource_ShouldReturnCompressedStream()
     {
         // Arrange
         var storage = CreateResourceStorage();
@@ -164,7 +164,7 @@ public class ResourceStorageTests : AstraTestBase
     }
 
     [Fact]
-    public async Task OpenReadAsync_ShouldThrowExceptionForNonExistingResource()
+    public async Task OpenReadAsync_NonExistingResource_ShouldThrowException()
     {
         // Arrange
         var storage = CreateResourceStorage();

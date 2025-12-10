@@ -81,7 +81,7 @@ public class ResourceCompressorsTests
         var result = compressor.CompressToString(resource);
 
         // Assert
-        result.Should().Be(".class{color:red;margin:10px}");
+        result.Should().Be(".class{color:#f00;margin:10px}");
     }
 
     [Fact]

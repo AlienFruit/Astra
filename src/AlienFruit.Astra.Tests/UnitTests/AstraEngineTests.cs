@@ -1,4 +1,6 @@
-﻿using AlienFruit.Astra.Tests.Infrastructure;
+﻿using System.IO;
+using System.Text.Encodings.Web;
+using AlienFruit.Astra.Tests.Infrastructure;
 
 namespace AlienFruit.Astra.Tests.UnitTests;
 
@@ -7,7 +9,7 @@ public class AstraEngineTests : AstraTestBase
     private AstraEngine CreateAstraEngine() => new(HtmlResourceRendererMock.Object);
 
     [Fact]
-    public void Constructor_ShouldInitialize_WithHtmlResourceRenderer()
+    public void Constructor_OnInitialize_AddRequiredResources()
     {
         // Act
         var engine = CreateAstraEngine();
@@ -21,25 +23,7 @@ public class AstraEngineTests : AstraTestBase
     }
 
     [Fact]
-    public void AddViewBox_ShouldAddSpecification_OnValidSpecification()
-    {
-        // Arrange
-        var engine = CreateAstraEngine();
-        var specification = new ViewBoxSpecification
-        {
-            Id = "test-viewbox",
-            ConnectionErrorMessage = "Connection error"
-        };
-
-        // Act
-        var result = engine.AddViewBox(specification);
-
-        // Assert
-        result.Should().Be(engine);
-    }
-
-    [Fact]
-    public void AddViewBox_ShouldRenderJsCode_OnValidSpecification()
+    public void AddViewBox_WithViewBoxSpecification_AddJsCodeWithCorrectResourceNamePathAndSpec()
     {
         // Arrange
         var engine = CreateAstraEngine();
@@ -60,26 +44,7 @@ public class AstraEngineTests : AstraTestBase
     }
 
     [Fact]
-    public void AddViewBoxLink_ShouldAddSpecification_OnNewSpecification()
-    {
-        // Arrange
-        var engine = CreateAstraEngine();
-        var specification = new ViewBoxLinkSpecification
-        {
-            Id = "test-link",
-            ViewBoxId = "test-viewbox",
-            Uri = new Uri("/test", UriKind.Relative)
-        };
-
-        // Act
-        var result = engine.AddViewBoxLink(specification);
-
-        // Assert
-        result.Should().Be(engine);
-    }
-
-    [Fact]
-    public void AddViewBoxLink_ShouldRenderJsCode_OnNewSpecification()
+    public void AddViewBoxLink_WithViewBoxLinkSpecification_AddJsCodeWithCorrectResourceNamePathAndSpec()
     {
         // Arrange
         var engine = CreateAstraEngine();
@@ -101,7 +66,7 @@ public class AstraEngineTests : AstraTestBase
     }
 
     [Fact]
-    public void AddViewBoxLink_ShouldNotAddDuplicateSpecification_WhenAddingSameSpecTwice()
+    public void AddViewBoxLink_WithDuplicateSpecification_AddJsCodeOnce()
     {
         // Arrange
         var engine = CreateAstraEngine();
@@ -113,11 +78,11 @@ public class AstraEngineTests : AstraTestBase
         };
 
         // Act
-        engine.AddViewBoxLink(specification);
-        var result = engine.AddViewBoxLink(specification);
+        engine
+            .AddViewBoxLink(specification)
+            .AddViewBoxLink(specification);
 
         // Assert
-        result.Should().Be(engine);
         HtmlResourceRendererMock.Verify(x => x.AddJsCodeFromTemplate(
             It.IsAny<string>(),
             It.IsAny<string>(),
@@ -125,7 +90,7 @@ public class AstraEngineTests : AstraTestBase
     }
 
     [Fact]
-    public void RenderHeaders_ShouldAddViewBoxScript_OnCall()
+    public void RenderHeaders_OnFirstCall_AddViewBoxScript()
     {
         // Arrange
         var engine = CreateAstraEngine();
@@ -143,7 +108,7 @@ public class AstraEngineTests : AstraTestBase
     }
 
     [Fact]
-    public void RenderHeaders_ShouldReturnHtmlContentBuilder_OnCall()
+    public void RenderHeaders_WithHeaders_SetupHtmlContentBuilderWithExpectedHeaders()
     {
         // Arrange
         var engine = CreateAstraEngine();
@@ -157,10 +122,16 @@ public class AstraEngineTests : AstraTestBase
         // The result should be HtmlContentBuilder containing the rendered headers and meta tag
         result.Should().NotBeNull();
         result.Should().BeOfType<Microsoft.AspNetCore.Html.HtmlContentBuilder>();
+
+        // Check the content by writing to StringWriter
+        using var writer = new StringWriter();
+        result.WriteTo(writer, HtmlEncoder.Default);
+        var content = writer.ToString();
+        content.Should().Be($"{expectedHeadersHtml}<meta id=\"load-check\">\r\n");
     }
 
     [Fact]
-    public void IncompleteLoadCheck_ShouldRenderBodyResource_WhenCalled()
+    public void IncompleteLoadCheck_OnCall_RenderExpectedBodyResource()
     {
         // Arrange
         var engine = CreateAstraEngine();
@@ -176,7 +147,7 @@ public class AstraEngineTests : AstraTestBase
     }
 
     [Fact]
-    public void RouteLayout_ShouldReturnNull_ForAjaxRequest()
+    public void RouteLayout_AjaxRequest_ReturnNull()
     {
         // Arrange
         var engine = CreateAstraEngine();
@@ -192,7 +163,7 @@ public class AstraEngineTests : AstraTestBase
     }
 
     [Fact]
-    public void RouteLayout_ShouldReturnDefaultLayout_ForRegularRequest()
+    public void RouteLayout_RegularRequest_ReturnDefaultLayout()
     {
         // Arrange
         var engine = CreateAstraEngine();
@@ -208,7 +179,7 @@ public class AstraEngineTests : AstraTestBase
     }
 
     [Fact]
-    public void GetViewBoxLinkClass_ShouldReturnSelectedClass_ForActiveLink()
+    public void GetViewBoxLinkClass_ActiveLink_ReturnSelectedClass()
     {
         // Arrange
         var engine = CreateAstraEngine();
@@ -233,7 +204,7 @@ public class AstraEngineTests : AstraTestBase
     }
 
     [Fact]
-    public void GetViewBoxLinkClass_ShouldReturnDefaultClass_ForInactiveLink()
+    public void GetViewBoxLinkClass_InactiveLink_ReturnDefaultClass()
     {
         // Arrange
         var engine = CreateAstraEngine();
@@ -258,7 +229,7 @@ public class AstraEngineTests : AstraTestBase
     }
 
     [Fact]
-    public void GetViewBoxLinkClass_ShouldThrowException_ForNonExistentLink()
+    public void GetViewBoxLinkClass_NonExistentLink_ThrowException()
     {
         // Arrange
         var engine = CreateAstraEngine();

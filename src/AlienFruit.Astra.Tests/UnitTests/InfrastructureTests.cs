@@ -6,7 +6,7 @@ namespace AlienFruit.Astra.Tests.UnitTests;
 public class InfrastructureTests : AstraTestBase
 {
     [Fact]
-    public void AstraTestBase_ShouldInitializeMocks()
+    public void AstraTestBase_OnInitialize_InitializeMocks()
     {
         // Assert
         HtmlResourceRendererMock.Should().NotBeNull();
@@ -14,7 +14,7 @@ public class InfrastructureTests : AstraTestBase
     }
 
     [Fact]
-    public void CreateTagHelperContext_ShouldCreateValidContext()
+    public void CreateTagHelperContext_WithTagName_CreateValidContext()
     {
         // Act
         var context = CreateTagHelperContext("test-tag");
@@ -26,7 +26,7 @@ public class InfrastructureTests : AstraTestBase
     }
 
     [Fact]
-    public void CreateTagHelperOutput_ShouldCreateValidOutput()
+    public void CreateTagHelperOutput_WithTagName_CreateValidOutput()
     {
         // Act
         var output = CreateTagHelperOutput("test-tag");
@@ -37,7 +37,7 @@ public class InfrastructureTests : AstraTestBase
     }
 
     [Fact]
-    public void SetupHtmlResourceRendererRenderHeaders_ShouldConfigureMock()
+    public void SetupHtmlResourceRendererRenderHeaders_WithHtml_ConfigureMock()
     {
         // Arrange
         var expectedHtml = "<script src='test.js'></script>";
@@ -51,7 +51,7 @@ public class InfrastructureTests : AstraTestBase
     }
 
     [Fact]
-    public void SetupHtmlResourceRendererRenderBodyResource_ShouldConfigureMock()
+    public void SetupHtmlResourceRendererRenderBodyResource_WithResourceName_ConfigureMock()
     {
         // Arrange
         var resourceName = "test.js";
@@ -66,7 +66,7 @@ public class InfrastructureTests : AstraTestBase
     }
 
     [Fact]
-    public void SetupResourceCompressorCompressToString_ShouldConfigureMock()
+    public void SetupResourceCompressorCompressToString_WithExpectedResult_ConfigureMock()
     {
         // Arrange
         var expectedResult = "compressed content";
@@ -80,7 +80,7 @@ public class InfrastructureTests : AstraTestBase
     }
 
     [Fact]
-    public void CreateEmbeddedResource_ShouldCreateValidResource()
+    public void CreateEmbeddedResource_WithParameters_CreateValidResource()
     {
         // Arrange
         var name = "test-resource";
@@ -96,7 +96,7 @@ public class InfrastructureTests : AstraTestBase
     }
 
     [Fact]
-    public void CreateInMemoryResource_ShouldCreateValidResource()
+    public void CreateInMemoryResource_WithParameters_CreateValidResource()
     {
         // Arrange
         var name = "test-resource";
@@ -111,7 +111,7 @@ public class InfrastructureTests : AstraTestBase
     }
 
     [Fact]
-    public void CreateMemoryStream_ShouldCreateStreamWithContent()
+    public void CreateMemoryStream_WithContent_CreateStreamWithContent()
     {
         // Arrange
         var content = "test content";

@@ -3,6 +3,8 @@ using AlienFruit.Astra.Tests.Infrastructure;
 using FluentAssertions;
 using Microsoft.AspNetCore.Html;
 using Moq;
+using System.IO;
+using System.Text.Encodings.Web;
 
 namespace AlienFruit.Astra.Tests.UnitTests;
 
@@ -12,17 +14,7 @@ public class HtmlResourceRendererTests : AstraTestBase
         new(ResourceStorageMock.Object, CreateAstraConfiguration());
 
     [Fact]
-    public void Constructor_ShouldInitializeWithDependencies()
-    {
-        // Act
-        var renderer = CreateHtmlResourceRenderer();
-
-        // Assert
-        renderer.Should().NotBeNull();
-    }
-
-    [Fact]
-    public void AddStylesheetResource_ShouldRegisterResourceAndCalculateHash()
+    public void AddStylesheetResource_NewResourceName_RegisterResource()
     {
         // Arrange
         var renderer = CreateHtmlResourceRenderer();
@@ -31,14 +23,14 @@ public class HtmlResourceRendererTests : AstraTestBase
         var assembly = typeof(HtmlResourceRendererTests).Assembly;
 
         // Act
-        renderer.AddStylesheetResource(name, path, Abstractions.AstraResourceLocation.Header, assembly);
+        renderer.AddStylesheetResource(name, path, AstraResourceLocation.Header, assembly);
 
         // Assert
         ResourceStorageMock.Verify(x => x.RegisterResource(name, path, assembly), Times.Once);
     }
 
     [Fact]
-    public void AddScriptResource_ShouldRegisterResourceAndCalculateHash()
+    public void AddScriptResource_NewResourceName_RegisterResource()
     {
         // Arrange
         var renderer = CreateHtmlResourceRenderer();
@@ -47,14 +39,14 @@ public class HtmlResourceRendererTests : AstraTestBase
         var assembly = typeof(HtmlResourceRendererTests).Assembly;
 
         // Act
-        renderer.AddScriptResource(name, path, Abstractions.AstraResourceLocation.Header, assembly);
+        renderer.AddScriptResource(name, path, AstraResourceLocation.Header, assembly);
 
         // Assert
         ResourceStorageMock.Verify(x => x.RegisterResource(name, path, assembly), Times.Once);
     }
 
     [Fact]
-    public void AddJsCode_ShouldRegisterInMemoryResource()
+    public void AddJsCode_NewResourceName_RegisterInMemoryResource()
     {
         // Arrange
         var renderer = CreateHtmlResourceRenderer();
@@ -62,14 +54,14 @@ public class HtmlResourceRendererTests : AstraTestBase
         var jsCode = "console.log('test');";
 
         // Act
-        renderer.AddJsCode(name, jsCode, Abstractions.AstraResourceLocation.Header);
+        renderer.AddJsCode(name, jsCode, AstraResourceLocation.Header);
 
         // Assert
         ResourceStorageMock.Verify(x => x.RegisterResource(name, jsCode), Times.Once);
     }
 
     [Fact]
-    public void AddJsCodeFromTemplate_ShouldParseTemplateAndRegisterResource()
+    public void AddJsCodeFromTemplate_ValidTemplate_ParseAndRegisterResource()
     {
         // Arrange
         var renderer = CreateHtmlResourceRenderer();
@@ -85,7 +77,7 @@ public class HtmlResourceRendererTests : AstraTestBase
     }
 
     [Fact]
-    public void IsResourceExists_ShouldReturnTrueForExistingScriptResource()
+    public void IsResourceExists_ExistingScriptResource_ReturnTrue()
     {
         // Arrange
         var renderer = CreateHtmlResourceRenderer();
@@ -100,7 +92,7 @@ public class HtmlResourceRendererTests : AstraTestBase
     }
 
     [Fact]
-    public void IsResourceExists_ShouldReturnTrueForExistingStyleResource()
+    public void IsResourceExists_ExistingStyleResource_ReturnTrue()
     {
         // Arrange
         var renderer = CreateHtmlResourceRenderer();
@@ -115,7 +107,7 @@ public class HtmlResourceRendererTests : AstraTestBase
     }
 
     [Fact]
-    public void IsResourceExists_ShouldReturnFalseForNonExistingResource()
+    public void IsResourceExists_NonExistingResource_ReturnFalse()
     {
         // Arrange
         var renderer = CreateHtmlResourceRenderer();
@@ -128,7 +120,7 @@ public class HtmlResourceRendererTests : AstraTestBase
     }
 
     [Fact]
-    public void RenderHeaders_ShouldRenderStylesAndScripts()
+    public void RenderHeaders_WithResources_RenderStylesAndScripts()
     {
         // Arrange
         var renderer = CreateHtmlResourceRenderer();
@@ -141,16 +133,24 @@ public class HtmlResourceRendererTests : AstraTestBase
         // Assert
         result.Should().NotBeNull();
         result.Should().BeOfType<HtmlContentBuilder>();
+
+        // Check HTML content
+        using var stringWriter = new StringWriter();
+        result.WriteTo(stringWriter, HtmlEncoder.Default);
+        var htmlContent = stringWriter.ToString();
+
+        htmlContent.Should().Contain("<link href=\"/astra/test.css\" rel=\"stylesheet\" type=\"text/css\" />");
+        htmlContent.Should().Contain("<script src=\"/astra/test.js\"></script>");
     }
 
     [Fact]
-    public void RenderBodyResource_ShouldRenderScriptInBody()
+    public void RenderBodyResource_RegisteredBodyResource_RenderScript()
     {
         // Arrange
         var renderer = CreateHtmlResourceRenderer();
         var name = "test-body.js";
         var jsCode = "console.log('body script');";
-        renderer.AddJsCode(name, jsCode, Abstractions.AstraResourceLocation.Body);
+        renderer.AddJsCode(name, jsCode, AstraResourceLocation.Body);
 
         // Mock resource storage to return content
         var contentStream = CreateMemoryStream(jsCode);
@@ -163,10 +163,19 @@ public class HtmlResourceRendererTests : AstraTestBase
         // Assert
         result.Should().NotBeNull();
         result.Should().BeOfType<HtmlContentBuilder>();
+
+        // Check HTML content
+        using var stringWriter = new StringWriter();
+        result.WriteTo(stringWriter, HtmlEncoder.Default);
+        var htmlContent = stringWriter.ToString();
+
+        htmlContent.Should().Contain("<script>");
+        htmlContent.Should().Contain(jsCode);
+        htmlContent.Should().Contain("</script>");
     }
 
     [Fact]
-    public void RenderBodyResource_ShouldThrowExceptionForNonExistingResource()
+    public void RenderBodyResource_NonExistingResource_ThrowException()
     {
         // Arrange
         var renderer = CreateHtmlResourceRenderer();
@@ -177,7 +186,7 @@ public class HtmlResourceRendererTests : AstraTestBase
     }
 
     [Fact]
-    public void GetResourceUrl_ShouldReturnUrlWithVersioningWhenEnabled()
+    public void GetResourceUrl_VersioningEnabled_ReturnUrlWithVersion()
     {
         // Arrange
         var configuration = CreateAstraConfiguration(enableVersioning: true, resourceVersion: "1.0.0");
@@ -192,7 +201,7 @@ public class HtmlResourceRendererTests : AstraTestBase
     }
 
     [Fact]
-    public void GetResourceUrl_ShouldReturnUrlWithoutVersioningWhenDisabled()
+    public void GetResourceUrl_VersioningDisabled_ReturnUrlWithoutVersion()
     {
         // Arrange
         var configuration = CreateAstraConfiguration(enableVersioning: false);

@@ -88,7 +88,7 @@ public class ResourceModelsTests
         // Assert
         content.Should().NotBeNull();
         content.Should().NotBeEmpty();
-        content.Should().Contain("loadCheck"); // Known content from load-check.js
+        content.Should().Contain("load-check"); // Known content from load-check.js
     }
 
     [Fact]

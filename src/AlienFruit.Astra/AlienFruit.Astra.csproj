@@ -40,6 +40,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Core\Resources\load-check.js" />
+    <EmbeddedResource Include="ViewBoxLinkGroup\Resources\viewboxlink-group-init-script.template.js" />
     <EmbeddedResource Include="ViewBoxLink\Resources\viewboxlink-init-script.template.js" />
     <EmbeddedResource Include="ViewBox\Resources\viewbox-init-script.template.js" />
     <EmbeddedResource Include="ViewBox\Resources\viewbox.js" />

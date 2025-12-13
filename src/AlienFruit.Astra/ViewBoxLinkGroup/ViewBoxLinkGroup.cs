@@ -87,6 +87,13 @@ namespace AlienFruit.Astra.ViewBoxLinkGroup
             {
                 output.Attributes.SetAttribute("class", ViewBoxLinkGroup.GetClassName(httpContextAccessor.HttpContext, specification));
             }
+
+            htmlResourceRenderer.AddJsCodeFromTemplate(
+                $"viewbox-link-group-init--{Id}",
+                ViewBoxLinkGroupSpecification.InitScriptTemplatePath, 
+                specification, AstraResourceLocation.Body);
+
+            output.PostContent.AppendHtml(htmlResourceRenderer.RenderBodyResource($"viewbox-link-group-init--{Id}"));
         }
 
         private static string GetClassName(HttpContext? context, ViewBoxLinkGroupSpecification specification)

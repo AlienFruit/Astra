@@ -41,7 +41,7 @@ class ViewBox {
         this._startLoadingEventDelay = startLoadingEventDelay;
 
         //local state
-        this._uriArray = [];
+        this._uriArray = {};
         this._groupsArray = [];
         this._scrollUp = false;
         this._restoreScrollPosition = false;
@@ -238,6 +238,36 @@ class ViewBox {
 
                 this._scrollUp = tab.scrollUp;
             });
+        });
+
+        // Обработка групп элементов
+        this._selectGroups(uriToSelect);
+    }
+
+    /**
+     * Обрабатывает группы элементов и обновляет их классы в зависимости от выбранной URI
+     * @param {string} uriToSelect URI, которая была выбрана
+     * @private
+     */
+    _selectGroups(uriToSelect) {
+        this._groupsArray.forEach(group => {
+            // Проверяем, есть ли выбранная URI в списке активации группы
+            const isUriInGroup = group.uriListToActivate && group.uriListToActivate.includes(uriToSelect);
+            
+            const groupElement = document.getElementById(group.id);
+            if (!groupElement) {
+                return;
+            }
+
+            if (isUriInGroup) {
+                // Применяем класс selected для элементов, у которых URI совпадает
+                if (group.selectedClass !== null && group.selectedClass !== '') {
+                    groupElement.className = group.selectedClass;
+                }
+            } else {
+                // Применяем класс по умолчанию для элементов, у которых URI не совпадает
+                groupElement.className = group.defaultClass;
+            }
         });
     }
 

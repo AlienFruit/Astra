@@ -14,6 +14,20 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/AlienFruit.Astra.Demo.styles.css" asp-append-version="true" />
     @AstraEngine.RenderHeaders()
+    <style>
+        /* Dropdown меню при наведении без JavaScript */
+        .nav-item.dropdown:hover .dropdown-menu {
+            display: block;
+        }
+        
+        .nav-item.dropdown {
+            position: relative;
+        }
+        
+        .nav-item.dropdown .dropdown-menu {
+            margin-top: 0;
+        }
+    </style>
     <script>
         function onTimeoutAfterStartLoading(){
             document.getElementById('loading-icon').style.visibility = 'visible';
@@ -34,7 +48,7 @@
                 <view-box-link id="brand-link"
                     default-class-name="navbar-brand"
                     view-box-id="main-view-box1"
-                    uri="/Home"><img src="~/logo.webp" alt="AlienFruit.Astra.Demo" /></view-box-link>
+                    uri="/"><img src="~/logo.webp" alt="AlienFruit.Astra.Demo" /></view-box-link>
                 <img id="loading-icon" src="~/loading-icon.svg" alt="Loading..." />
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
                         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,58 +57,88 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between" id="navbarSupportedContent">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <view-box-link-group id="test-group1" 
-                                selected-class-name="nav-link text-dark active"
-                                default-class-name="nav-link"
-                                uri-to-activete="@([
-                                "/Home", 
-                                "/Home/Privacy"])">
-                                Test
-                            </view-box-link-group>
-                        </li>
-                        <li class="nav-item">
                             @* <view-box-link-group id="test-group2">
                             </view-box-link-group> *@
                             <view-box-link id="home-link1"
-                                selected-class-name="nav-link text-dark active"
+                                selected-class-name="nav-link text-primary active"
                                 default-class-name="nav-link"
                                 view-box-id="main-view-box1"
-                                uri="/Home">Home</view-box-link>
+                                uri="/">Home</view-box-link>
                         </li>
                         <li class="nav-item">
                             <view-box-link id="privacy-link1" 
-                                selected-class-name="nav-link text-dark active" 
+                                selected-class-name="nav-link text-primary active" 
                                 default-class-name="nav-link"
                                 view-box-id="main-view-box1"
                                 uri="/Home/Privacy">Privacy</view-box-link>
                         </li>
                         <li class="nav-item">
                             <view-box-link id="long-loading-link1" 
-                                selected-class-name="nav-link text-dark active" 
+                                selected-class-name="nav-link text-primary active" 
                                 default-class-name="nav-link"
                                 view-box-id="main-view-box1"
                                 uri="/Home/LongLoading">Long loading test</view-box-link>
                         </li>
                         <li class="nav-item">
                             <view-box-link id="dynamic-content-link1" 
-                                selected-class-name="nav-link text-dark active" 
+                                selected-class-name="nav-link text-primary active" 
                                 default-class-name="nav-link"
                                 view-box-id="main-view-box1"
                                 uri="/DynamicContent">Dynamic Content</view-box-link>
                         </li>
                         <li class="nav-item">
                             <view-box-link id="javascript-test-link1" 
-                                selected-class-name="nav-link text-dark active" 
+                                selected-class-name="nav-link text-primary active" 
                                 default-class-name="nav-link"
                                 view-box-id="main-view-box1"
                                 uri="/JavaScriptTest">JS loading test1</view-box-link>
                         </li>
                         <li class="nav-item">
                             <view-box-link id="fire-animation-link1" 
-                                selected-class-name="nav-link text-dark active" 
+                                selected-class-name="nav-link text-primary active" 
                                 default-class-name="nav-link"
                                 view-box-id="main-view-box1"
                                 uri="/JavaScriptTest/FireAnimation">JS loading test2</view-box-link>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <view-box-link-group 
+                                id="navbarDropdown" 
+                                view-box-id="main-view-box1"
+                                default-class-name="nav-link dropdown-toggle" 
+                                selected-class-name="nav-link dropdown-toggle text-primary" 
+                                role="button" 
+                                data-bs-toggle="dropdown" 
+                                aria-expanded="false"
+                                uri-to-activete="@([
+                                "/Home", 
+                                "/Home/Privacy",
+                                "/DynamicContent"])">
+                                Dropdown Menu
+                            </view-box-link-group>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li>
+                                    <view-box-link id="dropdown-item1"
+                                        selected-class-name="dropdown-item active"
+                                        default-class-name="dropdown-item"
+                                        view-box-id="main-view-box1"
+                                        uri="/Home">Dropdown Home</view-box-link>
+                                </li>
+                                <li>
+                                    <view-box-link id="dropdown-item2"
+                                        selected-class-name="dropdown-item active"
+                                        default-class-name="dropdown-item"
+                                        view-box-id="main-view-box1"
+                                        uri="/Home/Privacy">Dropdown Privacy</view-box-link>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <view-box-link id="dropdown-item3"
+                                        selected-class-name="dropdown-item active"
+                                        default-class-name="dropdown-item"
+                                        view-box-id="main-view-box1"
+                                        uri="/DynamicContent">Dropdown Dynamic</view-box-link>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                 </div>

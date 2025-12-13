@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-
-namespace AlienFruit.Astra.ViewBoxLink
+﻿namespace AlienFruit.Astra.ViewBoxLink
 {
     public class ViewBoxLinkSpecification
     {

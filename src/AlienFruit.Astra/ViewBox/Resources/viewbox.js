@@ -41,7 +41,8 @@ class ViewBox {
         this._startLoadingEventDelay = startLoadingEventDelay;
 
         //local state
-        this._uriArray = {};
+        this._uriArray = [];
+        this._groupsArray = [];
         this._scrollUp = false;
         this._restoreScrollPosition = false;
         this._timer = undefined;
@@ -146,6 +147,15 @@ class ViewBox {
             self._sendRequest(uri);
             return false;
         }
+    }
+
+    registerUriGroup(groupElementId, selectedClassName, defaultClassName, uriListToActivate) {
+        this._groupsArray.push({
+            id: groupElementId,
+            selectedClass: selectedClassName,
+            defaultClass: defaultClassName,
+            uriListToActivate: uriListToActivate
+        });
     }
 
     /**

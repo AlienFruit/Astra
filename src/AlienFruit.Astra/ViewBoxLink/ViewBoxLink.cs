@@ -1,5 +1,6 @@
 using AlienFruit.Astra.Abstractions;
 using AlienFruit.Astra.Core;
+using AlienFruit.Astra.ViewBoxLinkGroup;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 
@@ -72,6 +73,11 @@ namespace AlienFruit.Astra.ViewBoxLink
                 throw new ArgumentException("Id attribute is required");
             }
             output.Attributes.Add("id", Id);
+
+            if (string.IsNullOrWhiteSpace(ViewBoxId))
+            {
+                throw new ArgumentException("ViewBoxId attribute is required");
+            }
 
             if (string.IsNullOrWhiteSpace(Uri))
             {

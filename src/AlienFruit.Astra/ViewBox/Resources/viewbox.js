@@ -149,6 +149,13 @@ class ViewBox {
         }
     }
 
+    /**
+     * Registers a group of elements that will change style when any of the specified URIs is active.
+     * @param {string} groupElementId HTML element ID of the group container
+     * @param {string} selectedClassName CSS class applied when at least one URI from uriListToActivate is active
+     * @param {string} defaultClassName CSS class applied when none of the URIs from uriListToActivate is active
+     * @param {string[]} uriListToActivate Array of URIs that will activate the selected state for this group
+     */
     registerUriGroup(groupElementId, selectedClassName, defaultClassName, uriListToActivate) {
         this._groupsArray.push({
             id: groupElementId,
@@ -240,18 +247,16 @@ class ViewBox {
             });
         });
 
-        // Обработка групп элементов
         this._selectGroups(uriToSelect);
     }
 
     /**
-     * Обрабатывает группы элементов и обновляет их классы в зависимости от выбранной URI
-     * @param {string} uriToSelect URI, которая была выбрана
+     * Processes element groups and updates their classes based on the selected URI.
+     * @param {string} uriToSelect URI that was selected
      * @private
      */
     _selectGroups(uriToSelect) {
         this._groupsArray.forEach(group => {
-            // Проверяем, есть ли выбранная URI в списке активации группы
             const isUriInGroup = group.uriListToActivate && group.uriListToActivate.includes(uriToSelect);
             
             const groupElement = document.getElementById(group.id);
@@ -260,12 +265,10 @@ class ViewBox {
             }
 
             if (isUriInGroup) {
-                // Применяем класс selected для элементов, у которых URI совпадает
                 if (group.selectedClass !== null && group.selectedClass !== '') {
                     groupElement.className = group.selectedClass;
                 }
             } else {
-                // Применяем класс по умолчанию для элементов, у которых URI не совпадает
                 groupElement.className = group.defaultClass;
             }
         });

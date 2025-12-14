@@ -19,6 +19,10 @@ namespace AlienFruit.Astra.ViewBoxLinkGroup
         /// </summary>
         public required string Id { get; set; }
 
+        /// <summary>
+        /// Gets or sets the identifier of the view-box container associated with this group.
+        /// The group will monitor navigation events for the specified view-box.
+        /// </summary>
         public required string ViewBoxId { get; set; }
 
         /// <summary>
@@ -41,6 +45,10 @@ namespace AlienFruit.Astra.ViewBoxLinkGroup
         /// </summary>
         public string? TagName { get; set; }
 
+        /// <summary>
+        /// Gets or sets the array of URIs that will activate the selected state for this group.
+        /// When the current page URI matches any of these URIs, the SelectedClassName will be applied.
+        /// </summary>
         public required string[] UriToActivete { get; set; }
 
         /// <summary>

@@ -329,6 +329,83 @@ ViewBoxRegistry.abortCurrentRequest(viewBoxId);
 - All the same loading events and error handling apply as with view-box-link elements
 - JavaScript API calls respect the same configuration settings (address changes, loading delays, etc.)
 
+### 5.2. ViewBox Link Groups
+
+The `<view-box-link-group>` tag allows you to create groups of navigation elements that share a common visual state. This is useful for creating navigation menus, tab groups, or any collection of links where you want to apply styling to a container element when any of the associated URIs is active.
+
+**How view-box-link-group works:**
+- Groups multiple URIs together under a single container element
+- Automatically applies CSS classes to the group container based on the current page URI
+- Monitors navigation events from the associated view-box
+- Updates group styling when navigation occurs via view-box-link or JavaScript API
+
+**Example usage:**
+
+```html
+<view-box-link-group id="main-nav-group"
+    view-box-id="main-view-box1"
+    default-class-name="nav-item"
+    selected-class-name="nav-item active"
+    uri-to-activete="@([
+        "/Home", 
+        "/About", 
+        "/Contact"
+    ])">
+    <view-box-link id="home-link"
+        default-class-name="nav-link"
+        selected-class-name="nav-link active"
+        view-box-id="main-view-box1"
+        uri="/Home">
+        Home
+    </view-box-link>
+    <view-box-link id="about-link"
+        default-class-name="nav-link"
+        selected-class-name="nav-link active"
+        view-box-id="main-view-box1"
+        uri="/About">
+        About
+    </view-box-link>
+    <view-box-link id="contact-link"
+        default-class-name="nav-link"
+        selected-class-name="nav-link active"
+        view-box-id="main-view-box1"
+        uri="/Contact">
+        Contact
+    </view-box-link>
+</view-box-link-group>
+```
+
+**view-box-link-group parameters:**
+
+| Parameter | Type | Required | Description | Default Value |
+|-----------|------|----------|-------------|---------------|
+| `id` | `string` | ✅ Yes | Unique identifier for the view-box-link-group element. Used for JavaScript interaction and specification lookup | - |
+| `view-box-id` | `string` | ✅ Yes | ID of the view-box container associated with this group. The group will monitor navigation events for the specified view-box | - |
+| `uri-to-activete` | `string[]` | ✅ Yes | Array of URIs that will activate the selected state for this group. When the current page URI matches any of these URIs, the SelectedClassName will be applied | - |
+| `style` | `string` | ❌ No | Inline CSS styles for the group element | `null` |
+| `default-class-name` | `string` | ❌ No | CSS classes applied by default to the group element when none of the monitored URIs are active | `null` |
+| `selected-class-name` | `string` | ❌ No | CSS classes applied when at least one of the URIs from uri-to-activete is active | `null` |
+| `tag-name` | `string` | ❌ No | HTML tag name to use for the group element | `"div"` |
+
+**Use cases for view-box-link-group:**
+- **Navigation Menus:** Highlight menu sections when any page within that section is active
+- **Tab Groups:** Style tab containers based on which tab is currently displayed
+- **Breadcrumb Groups:** Apply styling to breadcrumb containers for related pages
+- **Category Navigation:** Group related pages together and style the category container
+
+**Benefits:**
+- **Centralized Styling:** Apply styles to a container element instead of managing individual links
+- **Automatic Updates:** Group styling updates automatically when navigation occurs
+- **Flexible Grouping:** Group any combination of URIs together, regardless of their structure
+- **Server-Side Rendering:** Initial CSS classes are applied on the server based on the current request path
+
+**Important notes:**
+- The `uri-to-activete` parameter must contain at least one URI
+- URI matching is case-insensitive
+- The group monitors navigation events from the specified view-box
+- Both server-side (initial page load) and client-side (AJAX navigation) styling updates are supported
+- The group element can contain any HTML content, including view-box-link elements
+
 ### 6. Resource Management
 
 **Resource Management** - is an important part of AlienFruit.Astra that provides automatic connection and management of JavaScript and CSS resources. This is necessary for the correct operation of dynamic content loading and preventing resource conflicts.

@@ -1,3 +1,6 @@
-﻿@{
-    Layout = "_Layout";
+@using AlienFruit.Astra.Core
+@inject AstraEngine AstraEngine
+@{
+    @AstraEngine.IncompleteLoadCheck()
+    Layout = AstraEngine.RouteLayout(Context, "_Layout");
 }

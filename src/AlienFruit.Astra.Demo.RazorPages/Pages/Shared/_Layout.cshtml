@@ -1,4 +1,9 @@
-﻿<!DOCTYPE html>
+@using AlienFruit.Astra.Core
+@using AlienFruit.Astra.Models
+@using System.Reflection
+@inject AstraEngine AstraEngine
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -8,6 +13,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/AlienFruit.Astra.Demo.RazorPages.styles.css" asp-append-version="true" />
+    @AstraEngine.RenderHeaders()
 </head>
 <body>
     <header>
@@ -21,10 +27,18 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
+                            <view-box-link id="home-link"
+                                selected-class-name="nav-link text-primary active"
+                                default-class-name="nav-link text-dark"
+                                view-box-id="main-view-box1"
+                                uri="/Index">Home</view-box-link>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
+                            <view-box-link id="privacy-link"
+                                selected-class-name="nav-link text-primary active"
+                                default-class-name="nav-link text-dark"
+                                view-box-id="main-view-box1"
+                                uri="/Privacy">Privacy</view-box-link>
                         </li>
                     </ul>
                 </div>
@@ -32,18 +46,21 @@
         </nav>
     </header>
     <div class="container">
-        <main role="main" class="pb-3">
+        <view-box id="main-view-box1" class="pb-3" role="main"
+            connection-error-message-resource="@(new InMemoryResource("connection-error", "<div class=\"alert alert-danger\">Failed to connect to server. Please check your internet connection.</div>"))">
             @RenderBody()
-        </main>
+        </view-box>
     </div>
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2025 - AlienFruit.Astra.Demo.RazorPages - <a asp-area="" asp-page="/Privacy">Privacy</a>
+            &copy; 2025 - AlienFruit.Astra.Demo.RazorPages -
+            <view-box-link id="footer-privacy-link"
+                view-box-id="main-view-box1"
+                uri="/Privacy">Privacy</view-box-link>
         </div>
     </footer>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 

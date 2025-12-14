@@ -97,7 +97,7 @@ The `<view-box>` tag is a container for dynamic page content. It is designed to 
 </view-box>
 ```
 
-**Параметры view-box:**
+**view-box Parameters:**
 
 | Parameter | Type | Required | Description | Default Value |
 |-----------|------|----------|-------------|---------------|
@@ -417,7 +417,7 @@ The `<view-box-link-group>` tag allows you to create groups of navigation elemen
 - **Location separation:** Resources can be placed in `<head>` (Header) or before the closing `</body>` (Body)
 - **AJAX navigation support:** When dynamically loading pages, resources are connected automatically without reloading
 
-**Как использовать:**
+**How to use:**
 
 ```html
 @using AlienFruit.Astra.Core
@@ -458,7 +458,7 @@ AlienFruit.Astra provides a flexible configuration system for optimizing resourc
 }
 ```
 
-**Или программно:**
+**Or programmatically:**
 
 ```csharp
 builder.AddAstra(options =>

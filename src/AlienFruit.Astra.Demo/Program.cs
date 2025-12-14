@@ -1,9 +1,15 @@
+using AlienFruit.Astra.Demo.Middleware;
 using AlienFruit.Astra.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.Configure<RouteOptions>(options =>
+{
+    options.LowercaseUrls = true;
+});
 
 builder.AddAstra();
 
@@ -15,6 +21,8 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
 }
 app.UseRouting();
+
+app.UseLowercaseUrl();
 
 app.UseAuthorization();
 

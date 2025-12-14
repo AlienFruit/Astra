@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="AlienFruit.Astra.Demo.RazorPages/AlienFruit.Astra.Demo.RazorPages.csproj" Id="f2ffcdd5-c70d-44d5-813f-156d012866b0" />
   <Project Path="AlienFruit.Astra.Demo/AlienFruit.Astra.Demo.csproj" />
   <Project Path="AlienFruit.Astra.Tests/AlienFruit.Astra.Tests.csproj" Id="821f1a43-e7ea-45b3-8d31-c3802561adee" />
   <Project Path="AlienFruit.Astra/AlienFruit.Astra.csproj" />

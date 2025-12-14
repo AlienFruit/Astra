@@ -29,23 +29,3 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
-
-#loading-icon {
-  visibility: hidden;
-  width: 24px;
-  height: 24px;
-  margin-left: 10px;
-  vertical-align: middle;
-}
-
-.nav-item.dropdown:hover .dropdown-menu {
-    display: block;
-}
-
-.nav-item.dropdown {
-    position: relative;
-}
-
-.nav-item.dropdown .dropdown-menu {
-    margin-top: 0;
-}

@@ -234,7 +234,8 @@ class ViewBox {
                     return;
                 }
 
-                if (tab.uri !== uriToSelect) {
+                // Case-insensitive URI comparison
+                if (tab.uri.toLowerCase() !== uriToSelect.toLowerCase()) {
                     tabElement.className = tab.defaultClass;
                     return;
                 }
@@ -257,7 +258,10 @@ class ViewBox {
      */
     _selectGroups(uriToSelect) {
         this._groupsArray.forEach(group => {
-            const isUriInGroup = group.uriListToActivate && group.uriListToActivate.includes(uriToSelect);
+            // Check if the selected URI is in the group's activation list (case-insensitive comparison)
+            const isUriInGroup = group.uriListToActivate && group.uriListToActivate.some(
+                uri => uri.toLowerCase() === uriToSelect.toLowerCase()
+            );
             
             const groupElement = document.getElementById(group.id);
             if (!groupElement) {

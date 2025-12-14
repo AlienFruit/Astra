@@ -2,7 +2,7 @@
 
 <img src="design/logo.png" alt="AlienFruit.Astra Logo" height="64">
 
-AlienFruit.Astra is a powerful .NET library designed to enhance ASP.NET MVC applications by enabling dynamic content loading and providing a seamless user experience with smooth navigation between pages without full page refreshes.
+AlienFruit.Astra is a powerful .NET library designed to enhance ASP.NET applications (both MVC and Razor Pages) by enabling dynamic content loading and providing a seamless user experience with smooth navigation between pages without full page refreshes.
 
 ## Features
 

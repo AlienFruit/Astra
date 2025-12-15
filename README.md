@@ -4,6 +4,21 @@
 
 AlienFruit.Astra is a powerful .NET library designed to enhance ASP.NET applications (both MVC and Razor Pages) by enabling dynamic content loading and providing a seamless user experience with smooth navigation between pages without full page refreshes.
 
+**Why Astra when Blazor exists?**
+
+While Blazor offers powerful client-side capabilities, Astra provides a lightweight alternative for developers who want to enhance existing ASP.NET applications with smooth AJAX navigation without the complexity of a full SPA framework. Perfect for incrementally improving user experience in traditional server-rendered applications.
+
+**Perfect for existing MVC projects!**
+
+Already have a working ASP.NET MVC or Razor Pages application? Astra can be integrated with minimal changes to your existing codebase. Transform your traditional server-rendered pages into modern, responsive applications with AJAX navigation.
+
+**What you'll get after migration:**
+- ⚡ **Faster page loads** - No more full page refreshes
+- 🎯 **Better UX** - Smooth transitions and loading states
+- 🏗️ **Preserved architecture** - Keep your existing controllers, views, and business logic
+- 📱 **Mobile-friendly** - Improved responsiveness on all devices
+- 🔧 **Easy maintenance** - Continue using familiar ASP.NET patterns
+
 ## Features
 
 *   **Dynamic Content Loading:** Load partial views or content blocks dynamically without reloading the entire page.

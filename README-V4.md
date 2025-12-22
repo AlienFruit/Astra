@@ -19,6 +19,30 @@ While modern frameworks like Blazor offer full client-side capabilities, AlienFr
 - 📱 **Mobile-Friendly by Design:** Enhance mobile user experience with efficient content loading.
 - 🔧 **Easy Maintenance:** Benefit from simplified integration and ongoing management.
 
+### Основная концепция AlienFruit.Astra
+
+Ниже представлена схема, иллюстрирующая, как AlienFruit.Astra обеспечивает динамическую загрузку контента без полной перезагрузки страницы:
+
+```mermaid
+graph TD
+    A[User clicks link] --> C{AJAX}
+    B[Page load] --> D{Full request}
+    
+    C --> E[Astra Server]
+    D --> F[ASP.NET MVC]
+    
+    E --> G[JS updates view-box]
+    F --> H[Full page render]
+    
+    G --> I[Partial UI]
+    H --> J[Full UI]
+    
+    classDef server fill:#e1f5fe
+    classDef client fill:#f3e5f5
+    class E,F server
+    class G,H,I,J client
+```
+
 ## Features
 
 *   **Dynamic Content Loading:** Load partial views or content blocks dynamically without reloading the entire page, optimizing performance and perceived speed.

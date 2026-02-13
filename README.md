@@ -29,6 +29,11 @@ Already have a working ASP.NET MVC or Razor Pages application? Astra can be inte
 *   **ViewBox Integration:** Integrate with the ViewBox pattern for isolated and reusable UI components.
 *   **Highly Customizable:** Easily configure the library to fit your application's specific needs.
 
+## Requirements
+
+- .NET 7.0 or higher
+- ASP.NET Core MVC or Razor Pages
+
 ## Installation
 
 Install AlienFruit.Astra via NuGet Package Manager Console:

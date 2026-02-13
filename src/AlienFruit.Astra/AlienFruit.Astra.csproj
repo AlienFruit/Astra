@@ -4,10 +4,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <!-- NuGet Package Properties -->
+<!-- NuGet Package Properties -->
     <PackageId>AlienFruit.Astra</PackageId>
     <Title>AlienFruit.Astra - Dynamic Content Loading for ASP.NET MVC</Title>
-    <Version>1.0.0</Version>
+    <GitVersion_NoFetchEnabled>true</GitVersion_NoFetchEnabled>
     <Authors>Alexander Prokopovich</Authors>
     <Company>AlienFruit</Company>
     <Description>A library that allows dynamic content loading in .NET MVC applications and enables smooth navigation between website pages without refreshing the entire page in the browser.</Description>
@@ -59,7 +59,7 @@
 	    <PackagePath>\</PackagePath>
 	  </None>
 	</ItemGroup>
-  <ItemGroup>
+<ItemGroup>
     <PackageReference Include="GitVersion.MsBuild" Version="6.5.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

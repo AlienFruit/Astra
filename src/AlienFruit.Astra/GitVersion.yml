@@ -1,0 +1,9 @@
+﻿mode: ContinuousDeployment
+assembly-versioning-scheme: MajorMinorPatch
+assembly-informational-format: '{SemVer}'
+branches:
+  master:
+    regex: ^master$
+    increment: Patch
+ignore:
+  sha: []

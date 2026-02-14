@@ -506,7 +506,7 @@ builder.AddAstra(options =>
 
 ## Contributing
 
-We welcome contributions to AlienFruit.Astra! If you have suggestions for improvements, new features, or bug fixes, please open an issue or submit a pull request on our [GitHub repository](https://github.com/alienfruit/AlienFruit.Astra).
+We welcome contributions to AlienFruit.Astra! If you have suggestions for improvements, new features, or bug fixes, please open an issue or submit a pull request on our [GitHub repository](https://github.com/alienfruit/Astra).
 
 ## License
 
@@ -514,4 +514,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact & Support
 
-For questions, support, or general discussions, please visit our [GitHub Discussions](https://github.com/alienfruit/AlienFruit.Astra/discussions) or open an issue on the [issue tracker](https://github.com/alienfruit/AlienFruit.Astra/issues).
+For questions, support, or general discussions, please visit our [GitHub Discussions](https://github.com/alienfruit/Astra/discussions) or open an issue on the [issue tracker](https://github.com/alienfruit/Astra/issues).

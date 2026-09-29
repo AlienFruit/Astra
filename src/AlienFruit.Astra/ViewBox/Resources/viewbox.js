@@ -56,6 +56,8 @@ class ViewBox {
         this._onFinishLoadingSubscribers = [];
         this._onScriptsExecutedSubscribers = [];
 
+        this._isLocked = false;
+
         for (let script of document.getElementsByTagName('script')) {
             if (script.src) {
                 // Add only relative script path, e.g. /js/test.js
@@ -209,7 +211,7 @@ class ViewBox {
         return this._isRequestInProgress;
     }
 
-    /**
+    /** 
      * Cleans up all ViewBox resources (timers, subscribers)
      */
     cleanup() {
@@ -224,6 +226,14 @@ class ViewBox {
         this._onTimeoutAfterStartLoadingSubscribers = [];
         this._onFinishLoadingSubscribers = [];
         this._onScriptsExecutedSubscribers = [];
+        this._isLocked = false;
+    }
+
+    /**
+     * Lock request sending for current ViewBox 
+     */
+    lock() {
+        this._isLocked = true;
     }
 
     _selectUri(uriToSelect) {
@@ -279,6 +289,10 @@ class ViewBox {
     }
 
     _sendRequest(uri, postParams, dontSaveHistory) {
+        if (this._isLocked) {
+            return;
+        }
+
         // Cancel previous request if it's still running
         if (this.abortController && !this.abortController.signal.aborted) {
             this.abortController.abort();

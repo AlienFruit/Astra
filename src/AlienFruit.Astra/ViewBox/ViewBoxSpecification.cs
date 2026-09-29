@@ -14,5 +14,6 @@
         public bool ChangingBrowserAddressEnable { get; set; } = true;
         public string? ParrentViewBoxId { get; set; }
         public required string ConnectionErrorMessage { get; set; }
+        public bool LockAfterFirstLoad { get; set; } = false;
     }
 }

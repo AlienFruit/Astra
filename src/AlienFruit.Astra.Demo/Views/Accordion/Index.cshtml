@@ -1,0 +1,76 @@
+﻿<div class="accordion" id="myAccordion">
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <view-box-link id="item1-link"
+                view-box-id="item1-view-box"
+                default-class-name="accordion-button collapsed"
+                tag-name="button"
+                uri="/accordion/content/item1"
+                data-bs-toggle="collapse"
+                data-bs-target="#item1">
+                Первый блок
+            </view-box-link>
+        </h2>
+        <div id="item1" class="accordion-collapse collapse"
+             data-bs-parent="#myAccordion">
+            <view-box id="item1-view-box"
+                class="accordion-body"
+                parent-view-box-id="main-view-box1"
+                changing-browser-address-enable="false"
+                lock-after-first-load="true">
+                Loading...
+            </view-box>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <view-box-link id="item2-link"
+                view-box-id="item2-view-box"
+                default-class-name="accordion-button collapsed"
+                tag-name="button"
+                uri="/accordion/content/item2"
+                data-bs-toggle="collapse"
+                data-bs-target="#item2">
+                Второй блок
+            </view-box-link>
+        </h2>
+        <div id="item2" class="accordion-collapse collapse"
+             data-bs-parent="#myAccordion">
+            <view-box id="item2-view-box"
+                class="accordion-body"
+                parent-view-box-id="main-view-box1"
+                changing-browser-address-enable="false"
+                lock-after-first-load="true">
+                Loading...
+            </view-box>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <view-box-link id="item3-link"
+                view-box-id="item3-view-box"
+                default-class-name="accordion-button collapsed"
+                tag-name="button"
+                uri="/accordion/content/item3"
+                data-bs-toggle="collapse"
+                data-bs-target="#item3">
+                Третий блок
+            </view-box-link>
+        </h2>
+        <div id="item3" class="accordion-collapse collapse"
+             data-bs-parent="#myAccordion">
+            <view-box id="item3-view-box"
+                class="accordion-body"
+                parent-view-box-id="main-view-box1"
+                changing-browser-address-enable="false"
+                lock-after-first-load="true">
+                @* on-finish-loading-js-function="() => { ViewBoxRegistry.getOrOnReady('item3-view-box', x => x.lock()); }"> *@
+                Loading...
+            </view-box>
+        </div>
+    </div>
+
+</div>

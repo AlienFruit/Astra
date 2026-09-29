@@ -38,6 +38,5 @@
             using var reader = new StreamReader(GetStream());
             return reader.ReadToEnd();
         }
-
     }
 }

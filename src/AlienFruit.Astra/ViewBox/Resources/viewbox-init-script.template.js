@@ -47,3 +47,7 @@ ViewBoxRegistry
 {{ if OnScriptsExecutedJsFunction && OnScriptsExecutedJsFunction != "" }}
 ViewBoxRegistry.get('{{ Id }}').subscribeOnScriptsExecuted({{ OnScriptsExecutedJsFunction }});
 {{ end }}
+
+{{ if LockAfterFirstLoad }}
+ViewBoxRegistry.getOrOnReady('{{ Id }}', x => x.subscribeOnFinishLoading(() => x.lock()));
+{{ end }}

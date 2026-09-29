@@ -69,7 +69,7 @@ namespace AlienFruit.Astra.DependencyInjection
                 
                 if (!storage.Contains(resourceName))
                 {
-                    return Results.NotFound();
+                    return Results.NotFound(); 
                 }
                 var contentType = MimeTypeMapper.GetMimeType(resourceName);
                 var stream = await storage.OpenReadAsync(resourceName);

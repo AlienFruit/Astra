@@ -89,6 +89,11 @@ namespace AlienFruit.Astra.ViewBox
         public Resource? ConnectionErrorMessageResource { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether the view-box should lock after the first content load, preventing further navigation.
+        /// </summary>
+        public bool LockAfterFirstLoad { get; set; } = false;
+
+        /// <summary>
         /// Processes the view-box tag helper and generates the necessary HTML and JavaScript for dynamic content loading.
         /// This method sets up the container element, initializes JavaScript resources, and configures event handlers.
         /// </summary>
@@ -129,6 +134,7 @@ namespace AlienFruit.Astra.ViewBox
                 OnScriptsExecutedJsFunction = OnScriptsExecutedJsFunction,
                 ChangingBrowserAddressEnable = ChangingBrowserAddressEnable,
                 ParrentViewBoxId = ParentViewBoxId,
+                LockAfterFirstLoad = LockAfterFirstLoad,
                 ConnectionErrorMessage = GetConnectionErrorMessage()
             };
 

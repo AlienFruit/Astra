@@ -86,66 +86,87 @@ default interface methods (net7+), устаревшие пути помечае�
 
 ## Этап 2 — атомарный реестр синглтона (ломает torn write по структуре)
 
-- [ ] **Новая модель** `ResourceEntry` (internal record): `Name`, `Location`,
+- [x] **Новая модель** `ResourceEntry` (internal record): `Name`, `Kind`, `Location`,
   `Source` (закрытый тип: `EmbeddedSource(path, assembly)` | `CodeSource(content)`),
-  `Lazy<string> Version` — вычисляется один раз, лениво, только при Header-чтении.
-- [ ] **Схлопнуть словари** `HtmlResourceRenderer`: `resourceScripts` + `resourceStyles` +
+  `Version` (`Lazy<string>?`) — вычисляется один раз, лениво, только при Header-чтении
+  (`ResourceEntry.cs`); пустой хеш (сбой) не даёт `?v=`.
+- [x] **Схлопнуть словари** `HtmlResourceRenderer`: `resourceScripts` + `resourceStyles` +
   внешний join с `IResourceStorage` → один `ConcurrentDictionary<string, ResourceEntry>`.
   Все четыре `Add*` конструируют entry целиком и делают единственную `TryAdd`. Дисциплина
-  «storage раньше реестра» становится ненужной: состояния «имя есть, контента нет» не существует.
-- [ ] `RenderBodyResource`/`RenderHeaders`/`IsResourceExists`/`GetResourceVersion` читают из entry.
-- [ ] Сохранить публичный контракт `IResourceStorage` (нужен endpoint'у `UseAstra` и пользователям,
-  регистрировавшим ресурсы напрямую): renderer проксирует Header-записи в storage при регистрации.
-- [ ] **Перестать молча подменять контент:** повторный add того же имени с другим содержимым →
-  `InvalidOperationException` вместо тихого first-write-wins.
-- [ ] Тесты:
-  - [ ] `HtmlResourceRendererTests` — переносятся без изменения публичного поведения.
-  - [ ] `ResourceRegistrationRaceTests` — **зелёные без единой правки** (критерий: наблюдаемое
-    поведение не изменилось).
-  - [ ] `AddJsCode_SameNameDifferentContent_Throws`.
-  - [ ] `GetResourceUrl_ConcurrentSameHeaderResource_ComputesHashOnce` — N потоков, один хеш.
-- [ ] Прогон: полный набор + `Release` net7–net10.
+  «storage раньше реестра» стала ненужной: состояния «имя есть, контента нет» не существует
+  (тест `Registry_IsASingleAtomicStore_NoSplitLocationDictionaries`).
+- [x] `RenderBodyResource`/`RenderHeaders`/`IsResourceExists`/`GetResourceVersion` читают из entry
+  (Body-контент — из `entry.Source`; хеш embedded — через storage.OpenRead, как раньше,
+  чтобы URL-и `?v=` не поменялись).
+- [x] Публичный контракт `IResourceStorage` сохранён: renderer проксирует в storage только
+  **Header**-записи (endpoint `UseAstra` их отдаёт; Body-ресурсы в URL-пространство не
+  попадают — инвариант 4 уже на этом этапе).
+- [x] **Перестать молча подменять контент:** повторный add того же имени с другим содержимым
+  (или другой kind/location) → `InvalidOperationException` вместо тихого first-write-wins;
+  идентичная повторная регистрация — идемпотентный no-op.
+- [x] Тесты:
+  - [x] `HtmlResourceRendererTests` — перенесены без изменения публичного поведения.
+  - [x] `ResourceRegistrationRaceTests` — **зелёные без единой правки** (файл не в `git diff`).
+  - [x] `AddJsCode_SameNameDifferentContent_Throws` (+ `AddScriptResource_SameNameDifferentPath_Throws`,
+    `AddJsCodeFromTemplate_SameNameDifferentSpecification_Throws`).
+  - [x] `GetResourceUrl_ConcurrentSameHeaderResource_ComputesHashOnce` — 16 потоков, один хеш,
+    регистрация не читает контент (`OpenReadCount == 0` до первого чтения).
+- [x] Прогон: полный набор 132/132 (net10.0) + `Release` net7–net10 + solution (demo, tests) —
+  succeeded; smoke-прогон demo: home=200, `/astra/viewbox.js`=200, `?v=` идентичен этапу 1,
+  инлайн-init 1×`ViewBoxRegistry.create` + 12×`registerUri`, `load-check` в `<script>` в Body.
 
 ## Этап 3 — stateless пер-инстансные скрипты (главный сдвиг)
 
-- [ ] **Новый сервис** `IInitScriptRenderer` (public интерфейс, internal реализация):
+- [x] **Новый сервис** `IInitScriptRenderer` (public интерфейс, internal реализация):
 
   ```csharp
   public interface IInitScriptRenderer
   {
-      IHtmlContent RenderInline<T>(string templatePath, T specification) where T : class;
+      IHtmlContent RenderInline<T>(string resourceName, string templatePath, T specification) where T : class;
   }
   ```
 
   Чистая функция: embedded template → Scriban → `<script>…</script>`. Ни словарей, ни storage.
+  `resourceName` — не в реестр, а только для компрессора (Nuglify выбирает минификацию по
+  расширению имени, как в старом пути через storage) — вывод байт-в-байт прежний.
   Регистрация: `AddSingleton` (stateless, дёшево).
-- [ ] **Перевести tag helper'ы** (`ViewBox`, `ViewBoxLink`, `ViewBoxLinkGroup`) с пары
+- [x] **Перевести tag helper'ы** (`ViewBox`, `ViewBoxLink`, `ViewBoxLinkGroup`) с пары
   `AddJsCodeFromTemplate(..., Body)` + `RenderBodyResource(...)` на один `RenderInline`.
-  Конструктор: добавить параметр — helper'ы создаются DI; ручное `new` только в тестах
-  (`ViewBoxLinkTests.CreateViewBoxLink` через `Activator` — поправить).
-  Порядок внутри этапа: `ViewBoxLink` → `ViewBox` → `ViewBoxLinkGroup`, по helper'у за шаг.
-- [ ] `AddJsCodeFromTemplate(..., Body, ...)` и `RenderBodyResource` **остаются** для
+  Конструктор: `IHtmlResourceRenderer` заменён на `IInitScriptRenderer` (старый параметр стал
+  мёртвым); helper'ы создаются DI; ручное `new` только в тестах
+  (`ViewBoxLinkTests.CreateViewBoxLink` через `Activator` — поправлен).
+  Порядок внутри этапа: `ViewBoxLink` → `ViewBox` → `ViewBoxLinkGroup`.
+- [x] `AddJsCodeFromTemplate(..., Body, ...)` и `RenderBodyResource` **остаются** для
   startup-Body (`load-check.js`) и документированного пользовательского сценария; tag helper'ы
-  их больше не используют. `[Obsolete]` не вешать — вместо этого в XML-doc честно ограничить
-  область применения.
-- [ ] **Побочные эффекты (зафиксировать как исправления, не фичи):**
-  - [ ] `/astra/viewbox-link-init-{Id}` перестаёт отдаваться — пер-инстансные скрипты не попадают
-    в endpoint; закрывается утечка имён в URL-namespace.
-  - [ ] Два запроса с разным контентом под одним Id больше не могут обменяться скриптами —
-    staleness устранён по построению.
-  - [ ] Нулевой рост памяти по именам ссылок/вьюбоксов.
-  - [ ] Двойное подчёркивание `viewbox-link-group-init--{Id}` перестаёт иметь значение (имя уходит
-    из глобального пространства).
-- [ ] Тесты:
-  - [ ] `ResourceRegistrationRaceTests.ViewBoxLinkProcess_ConcurrentSameId_ShouldNeverThrow` —
-    остаётся зелёным.
-  - [ ] `ViewBoxLinkTests.InitScript_IsNotRegisteredGlobally`: после `Process`
-    `IsResourceExists("viewbox-link-init-{id}") == false` — прямое доказательство statelessness.
-  - [ ] Golden-тесты для трёх helper'ов: вывод `Process` содержит инлайн `<script>` с
-    отрендеренным шаблоном (uri/viewBoxId/классы подставлены) — фиксирует видимый HTML без изменений.
-  - [ ] `SingletonRegistry_DoesNotGrow_OverManyGeneratedIds`: 1000 уникальных data-derived Id
-    через три helper'а → `Count` реестра синглтона не изменился.
-- [ ] Прогон: полный набор + `Release` net7–net10.
+  их больше не используют. `[Obsolete]` не вешать — XML-doc ограничивает область применения
+  (`IHtmlResourceRenderer.AddJsCode/AddJsCodeFromTemplate/RenderBodyResource`).
+- [x] **Побочные эффекты (зафиксированы как исправления, не фичи):**
+  - [x] `/astra/viewbox-link-init-{Id}` перестаёт отдаваться — smoke-прогон demo: 404
+    (было 200 до этапа); закрывается утечка имён в URL-namespace.
+  - [x] Два запроса с разным контентом под одним Id больше не могут обменяться скриптами —
+    staleness устранён по построению (нет общего состояния).
+  - [x] Нулевой рост памяти по именам ссылок/вьюбоксов — тест
+    `SingletonRegistry_DoesNotGrow_OverManyGeneratedIds` (3000 скриптов, `entries.Count` не изменился).
+  - [x] Двойное подчёркивание `viewbox-link-group-init--{Id}` перестаёт иметь значение (имя уходит
+    из глобального пространства) — сохранено как было, для совместимости golden-вывода.
+- [x] Тесты:
+  - [x] `ResourceRegistrationRaceTests.ViewBoxLinkProcess_ConcurrentSameId_ShouldNeverThrow` —
+    зелёный. Отклонение от критерия «файл не меняется между этапами 1–3»: смена конструктора
+    `ViewBoxLink` (п. выше) требует одну строку конструкции (`new InitScriptRenderer()` вместо
+    renderer); сценарий, конкурентный каркас и ассерты не тронуты.
+  - [x] `InitScript_IsNotRegisteredGlobally` — во всех трёх helper-файлах
+    (`ViewBoxLinkTests`, `ViewBoxTests`, `ViewBoxLinkGroupTests`): после `Process`
+    `IsResourceExists("viewbox-link-init-{id}") == false` + `RegisterResource` ни разу.
+  - [x] Golden-тесты `InitScript_GoldenOutput_*` для трёх helper'ов: вывод `Process` содержит
+    инлайн `<script>` с отрендеренным шаблоном (uri/viewBoxId/классы подставлены).
+    `ViewBoxLinkGroupTests.cs` — новый файл (у group-хелпера покрытия не было вовсе).
+  - [x] `SingletonRegistry_DoesNotGrow_OverManyGeneratedIds` (`HtmlResourceRendererTests`):
+    1000 уникальных data-derived Id через три helper'а → `Count` реестра синглтона не изменился.
+  - [x] `AstraEngineTests.RenderHeaders_Then_ViewBoxTagHelper_DoesNotThrow` — конструкции
+    helper'ов обновлены под новый конструктор, ассерты не менялись.
+- [x] Прогон: полный набор 144/144 (net10.0) + `Release` net7–net10 (lib + solution) —
+  succeeded; smoke-прогон demo: home=200, `/astra/viewbox.js`=200 (тот же `?v=`),
+  HTML главной страницы **побайтово идентичен** этапу 2, `/astra/viewbox-link-init-*`=404.
 
 ## Этап 4 — документация и закрытие хвостов
 

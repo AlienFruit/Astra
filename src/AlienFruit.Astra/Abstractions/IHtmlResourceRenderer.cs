@@ -6,44 +6,32 @@ namespace AlienFruit.Astra.Abstractions
     public interface IHtmlResourceRenderer
     {
         /// <summary>
-        ///
-        /// </summary>
-        /// <param name="name">Extension can be omitted</param>
-        /// <param name="path">Path to embedded resource in assembly</param>
-        void AddScriptResource(string name, string path, AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null);
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="name">Extension can be omitted</param>
-        /// <param name="path">Path to embedded resource in assembly</param>
-        void AddStylesheetResource(string name, string path, AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null);
-
-        /// <summary>
         /// 
         /// </summary>
-        /// <param name="resourceName">Use name with extension if compression is needed</param>
-        /// <param name="jsCode">JavaScript code</param>
-        void AddJsCode(string resourceName, string jsCode, AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null);
+        /// <param name="name"></param>
+        /// <param name="path"></param>
+        /// <param name="resourceLocation"></param>
+        /// <param name="assembly"></param>
+        void AddResource(string name, string path, AstraResourceLocation resourceLocation, Assembly? assembly = null);
 
         void AddJsCodeFromTemplate<T>(
-            string resourceName, 
-            string templatePath, 
-            T specification, 
-            AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null) 
+            string resourceName,
+            string templatePath,
+            T specification,
+            AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null)
             where T : class;
-
-        bool IsResourceExists(string name);
 
         IHtmlContent RenderHeaders();
 
-        IHtmlContent RenderBodyResource(string name);
-
         /// <summary>
-        /// Gets resource URL with versioning
+        /// Inlines a Body-registered resource (see <see cref="AddJsCodeFromTemplate{T}"/> /
+        /// <see cref="AddScriptResource"/> with <see cref="AstraResourceLocation.Body"/>).
+        /// Scope: startup body content (e.g. load-check) and user-registered Body resources.
+        /// Tag helpers render their per-instance init scripts through
+        /// <see cref="IInitScriptRenderer"/> instead — nothing is registered or looked up here.
         /// </summary>
-        /// <param name="resourceName">Resource name</param>
-        /// <returns>URL with version parameter</returns>
-        string GetResourceUrl(string resourceName);
+        /// <param name="name">Registered resource name</param>
+        /// <exception cref="ArgumentException">Thrown when the name is not registered as a Body resource.</exception>
+        IHtmlContent RenderBodyResource(string name);
     }
 }

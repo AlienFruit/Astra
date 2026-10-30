@@ -2,7 +2,6 @@
 using AlienFruit.Astra.Models;
 using System.Collections.Concurrent;
 using System.Reflection;
-using System.Xml.Linq;
 
 namespace AlienFruit.Astra.Core
 {

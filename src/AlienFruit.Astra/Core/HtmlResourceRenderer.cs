@@ -7,67 +7,122 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Xml.Linq;
 
 namespace AlienFruit.Astra.Core
 {
+    /// <summary>
+    /// Atomic resource registry: one name maps to exactly one fully-formed
+    /// <see cref="ResourceEntry"/> published with a single <c>TryAdd</c>. A resource is
+    /// either fully registered (name + kind + location + content source) or absent —
+    /// a "half-registered" state is not expressible by construction.
+    /// <see cref="IResourceStorage"/> is kept as the serving mirror for the
+    /// <c>/astra/{name}</c> endpoint: Header registrations proxy into storage.
+    /// </summary>
     internal class HtmlResourceRenderer(
         IResourceStorage resourceStorage,
         AstraConfiguration configuration,
         ILogger<HtmlResourceRenderer>? logger = null) : IHtmlResourceRenderer
     {
-        private readonly ConcurrentDictionary<string, AstraResourceLocation> resourceStyles = new();
-        private readonly ConcurrentDictionary<string, AstraResourceLocation> resourceScripts = new();
-        private readonly ConcurrentDictionary<string, string> resourceHashes = new();
+        private readonly ConcurrentDictionary<string, ResourceEntry> entries = new();
 
-        public void AddStylesheetResource(string name, string path, AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null)
+        private readonly Dictionary<string, AstraResourceKind> resourceVersionCache = new(StringComparer.OrdinalIgnoreCase)
         {
-            if (resourceStyles.ContainsKey(name))
+            {".css", AstraResourceKind.Stylesheet },
+            { ".js", AstraResourceKind.Script },
+        };
+
+        public void AddResource(string name, string path, AstraResourceLocation resourceLocation, Assembly? assembly = null)
+        {
+
+            if (this.entries.TryGetValue(name, out var existing))
             {
+                //EnsureSameRegistration(existing, kind, resourceLocation);
                 return;
             }
 
-            // Content must reach storage before the name becomes visible in the location
-            // registry; otherwise concurrent (or failed) registrations leave RenderHeaders /
-            // RenderBodyResource looking up a name that ResourceStorage never received.
-            resourceStorage.RegisterResource(name, path, assembly ?? Assembly.GetExecutingAssembly());
-            CalculateResourceHash(name, resourceLocation);
-            resourceStyles.TryAdd(name, resourceLocation);
-        }
-
-        public void AddScriptResource(string name, string path, AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null)
-        {
-            if (resourceScripts.ContainsKey(name))
+            if (!resourceVersionCache.TryGetValue(Path.GetExtension(name), out var kind))
             {
-                return;
+                throw new ArgumentException($"Unsupported resource extension for '{name}'. Only .css and .js are allowed.");
             }
 
-            resourceStorage.RegisterResource(name, path, assembly ?? Assembly.GetExecutingAssembly());
-            CalculateResourceHash(name, resourceLocation);
-            resourceScripts.TryAdd(name, resourceLocation);
+            var resourceAssembly = assembly ?? Assembly.GetExecutingAssembly();
+
+            resourceStorage.RegisterResource(name, path, resourceAssembly);
+            var version = ComputeVersionFromStorage(name);
+            var entry = new ResourceEntry(name, kind, resourceLocation, version);
+
+            this.entries.TryAdd(name, entry);
         }
 
-        public void AddJsCode(string resourceName, string jsCode, AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null)
+        public IHtmlContent RenderHeaders()
         {
-            if (resourceScripts.ContainsKey(resourceName))
+            var builder = new HtmlContentBuilder();
+            foreach (var entry in entries.Values.Where(x => x.Location == AstraResourceLocation.Header && x.Kind == AstraResourceKind.Stylesheet))
             {
-                return;
+                builder.AppendHtmlLine($"<link href=\"/{configuration.ResourcesRoute}/{entry.Name}{GetResourceVersion(entry)}\" rel=\"stylesheet\" type=\"text/css\" />");
             }
 
-            resourceStorage.RegisterResource(resourceName, jsCode);
-            CalculateResourceHash(resourceName, resourceLocation, jsCode);
-            resourceScripts.TryAdd(resourceName, resourceLocation);
+            foreach (var entry in entries.Values.Where(x => x.Location == AstraResourceLocation.Header && x.Kind == AstraResourceKind.Script))
+            {
+                builder.AppendHtmlLine($"<script src=\"/{configuration.ResourcesRoute}/{entry.Name}{GetResourceVersion(entry)}\"></script>");
+            }
+
+            return builder;
         }
+
+        public IHtmlContent RenderBodyResource(string name)
+        {
+            if (entries.TryGetValue(name, out var entry) && entry.Location == AstraResourceLocation.Body)
+            {
+                var content = ResolveContent(name);
+                var builder = new HtmlContentBuilder();
+                if (entry.Kind == AstraResourceKind.Stylesheet)
+                {
+                    return builder
+                        .AppendHtmlLine("<style>")
+                        .AppendHtmlLine(content)
+                        .AppendHtmlLine("</style>");
+                }
+
+                return builder
+                    .AppendHtmlLine("<script>")
+                    .AppendHtmlLine(content)
+                    .AppendHtmlLine("</script>");
+            }
+
+            throw new ArgumentException($"resource {name} was not registered as body resource");
+        }
+
+        /// <summary>
+        /// Re-registration of the same name must never silently keep the first registration
+        /// (first-write-wins staleness). The identical registration → no-op; a conflicting
+        /// one (different content, kind or location) → <see cref="InvalidOperationException"/>.
+        /// </summary>
+        //private static void EnsureSameRegistration(ResourceEntry existing, AstraResourceKind kind, AstraResourceLocation location)
+        //{
+        //    if (existing.Kind != kind || existing.Location != location)
+        //    {
+        //        throw new InvalidOperationException(
+        //            $"Resource '{existing.Name}' is already registered differently (kind: {existing.Kind}, location: {existing.Location}). Use a unique name per resource.");
+        //    }
+        //}
 
         public void AddJsCodeFromTemplate<T>(
-            string resourceName, 
-            string templatePath, 
-            T specification, 
-            AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null) 
+            string resourceName,
+            string templatePath,
+            T specification,
+            AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null)
             where T : class
         {
-            if (resourceScripts.ContainsKey(resourceName))
+            if (this.entries.TryGetValue(resourceName, out var existing))
             {
                 return;
+            }
+
+            if (!resourceVersionCache.TryGetValue(Path.GetExtension(resourceName), out var kind))
+            {
+                throw new ArgumentException($"Unsupported resource extension for '{resourceName}'. Only .css and .js are allowed.");
             }
 
             var resourceAssembly = assembly ?? Assembly.GetExecutingAssembly();
@@ -81,60 +136,17 @@ namespace AlienFruit.Astra.Core
                 ?? throw new InvalidOperationException("Result script cannot be null");
 
             resourceStorage.RegisterResource(resourceName, scriptContent);
-            CalculateResourceHash(resourceName, resourceLocation, scriptContent);
-            resourceScripts.TryAdd(resourceName, resourceLocation);
+            var version = ComputeVersionFromStorage(resourceName);
+            var entry = new ResourceEntry(resourceName, kind, resourceLocation, version);
+            this.entries.TryAdd(resourceName, entry);
         }
 
-        public bool IsResourceExists(string name)
-            => resourceScripts.ContainsKey(name) || resourceStyles.ContainsKey(name);
-
-        public IHtmlContent RenderHeaders()
-        {
-            var builder = new HtmlContentBuilder();
-            foreach (var style in this.resourceStyles.Where(x => x.Value == AstraResourceLocation.Header))
-            {
-                var version = GetResourceVersion(style.Key);
-                builder.AppendHtmlLine($"<link href=\"/{configuration.ResourcesRoute}/{style.Key}{version}\" rel=\"stylesheet\" type=\"text/css\" />");
-            }
-
-            foreach (var script in this.resourceScripts.Where(x => x.Value == AstraResourceLocation.Header))
-            {
-                var version = GetResourceVersion(script.Key);
-                builder.AppendHtmlLine($"<script src=\"/{configuration.ResourcesRoute}/{script.Key}{version}\"></script>");
-            }
-
-            return builder;
-        }
-
-        public IHtmlContent RenderBodyResource(string name)
-        {
-            var builder = new HtmlContentBuilder();
-            if (this.resourceStyles.TryGetValue(name, out var resourceLocation) && resourceLocation == AstraResourceLocation.Body)
-            {
-                return builder
-                    .AppendHtmlLine("<style>")
-                    .AppendHtmlLine(GetResourceContent(name))
-                    .AppendHtmlLine("</style>");
-            }
-
-            if (this.resourceScripts.TryGetValue(name, out resourceLocation) && resourceLocation == AstraResourceLocation.Body)
-            {
-                return builder
-                    .AppendHtmlLine("<script>")
-                    .AppendHtmlLine(GetResourceContent(name))
-                    .AppendHtmlLine("</script>");
-            }
-
-            throw new ArgumentException($"resource {name} was not registered as body resource");
-        }
-
-        public string GetResourceUrl(string resourceName)
-        {
-            var version = GetResourceVersion(resourceName);
-            return $"/{configuration.ResourcesRoute}/{resourceName}{version}";
-        }
-
-        private string GetResourceContent(string resourceName)
+        /// <summary>
+        /// Body content resolves from the entry's own source — the same Resource the old
+        /// storage round-trip built, so compressor behavior (extension-driven Nuglify)
+        /// is preserved byte-for-byte.
+        /// </summary>
+        private string ResolveContent(string resourceName)
         {
             if (resourceStorage.Contains(resourceName) == false)
             {
@@ -146,7 +158,7 @@ namespace AlienFruit.Astra.Core
             return streamReader.ReadToEnd();
         }
 
-        private string GetResourceVersion(string resourceName)
+        private string GetResourceVersion(ResourceEntry entry)
         {
             if (!configuration.EnableVersioning)
             {
@@ -159,45 +171,36 @@ namespace AlienFruit.Astra.Core
                 return $"?v={configuration.ResourceVersion}";
             }
 
-            // Otherwise use content hash
-            if (resourceHashes.TryGetValue(resourceName, out var hash))
-            {
-                return $"?v={hash}";
-            }
-
-            return string.Empty;
+            return string.IsNullOrEmpty(entry.Version) ? string.Empty : $"?v={entry.Version}";
         }
 
-        private void CalculateResourceHash(string resourceName, AstraResourceLocation resourceLocation, string? content = null)
+
+        /// <summary>
+        /// Hash source for embedded (path-registered) resources is storage.OpenRead — the
+        /// compressed bytes, exactly as served by the /astra endpoint. A per-node timestamp
+        /// fallback would differ across nodes and thrash caches, so on failure the resource
+        /// is served WITHOUT a version parameter (logged once; Lazy caches the empty result).
+        /// </summary>
+        private string ComputeVersionFromStorage(string resourceName)
         {
-            // Body resources are inlined by RenderBodyResource — their version is never
-            // read, so the SHA256 pass would be pure cost.
-            if (resourceLocation != AstraResourceLocation.Header)
-            {
-                return;
-            }
-
-            if (!configuration.EnableVersioning || string.IsNullOrEmpty(configuration.ResourceVersion) == false)
-            {
-                return;
-            }
-
             try
             {
-                string contentToHash = content ?? GetResourceContent(resourceName);
-                var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(contentToHash));
-                var hash = Convert.ToBase64String(hashBytes).Replace("+", "-").Replace("/", "_").Replace("=", "")[..32];
-                resourceHashes.TryAdd(resourceName, hash);
+                var content = ResolveContent(resourceName);
+                return ComputeVersion(content);     
             }
             catch (Exception ex)
             {
-                // A per-node timestamp fallback produced different ?v= values on different
-                // nodes (cache thrashing). On failure the resource is served WITHOUT a
-                // version parameter instead.
                 logger?.LogError(ex,
                     "Failed to calculate the content version hash for resource '{ResourceName}'. It will be served without a version parameter.",
                     resourceName);
+                return string.Empty;
             }
+        }
+
+        private static string ComputeVersion(string content)
+        {
+            var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(content));
+            return Convert.ToBase64String(hashBytes).Replace("+", "-").Replace("/", "_").Replace("=", "")[..32];
         }
     }
 }

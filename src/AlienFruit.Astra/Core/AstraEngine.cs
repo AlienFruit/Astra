@@ -25,7 +25,8 @@ namespace AlienFruit.Astra.Core
         public AstraEngine(IHtmlResourceRenderer htmlResourceRenderer)
         {
             this.htmlResourceRenderer = htmlResourceRenderer;
-            this.htmlResourceRenderer.AddScriptResource("load-check.js", IncompleteLoadCheckScriptPath, AstraResourceLocation.Body);
+            this.htmlResourceRenderer.AddResource("load-check.js", IncompleteLoadCheckScriptPath, AstraResourceLocation.Body);
+            this.htmlResourceRenderer.AddResource("viewbox.js", ViewBoxSpecification.JsResourcePath, AstraResourceLocation.Header);
         }
 
         /// <summary>
@@ -35,9 +36,6 @@ namespace AlienFruit.Astra.Core
         /// <returns>An <see cref="IHtmlContent"/> containing all the rendered headers.</returns>
         public IHtmlContent RenderHeaders()
         {
-            htmlResourceRenderer.AddScriptResource("viewbox.js", ViewBoxSpecification.JsResourcePath);
-
-
             var result = new HtmlContentBuilder();
             result.AppendHtml(htmlResourceRenderer.RenderHeaders());
             result.AppendHtmlLine("<meta id=\"load-check\">");

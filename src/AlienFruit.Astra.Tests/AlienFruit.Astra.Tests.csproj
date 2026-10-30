@@ -29,6 +29,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Nested helper project: its bin/obj must not be compiled into the test assembly (CS0579) -->
+    <Compile Remove="TestTagHelper\**" />
+    <EmbeddedResource Remove="TestTagHelper\**" />
+    <None Remove="TestTagHelper\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
     <Using Include="FluentAssertions" />
     <Using Include="Moq" />

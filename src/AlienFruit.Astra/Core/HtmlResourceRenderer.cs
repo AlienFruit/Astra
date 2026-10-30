@@ -20,29 +20,41 @@ namespace AlienFruit.Astra.Core
 
         public void AddStylesheetResource(string name, string path, AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null)
         {
-            if (resourceStyles.TryAdd(name, resourceLocation))
+            if (resourceStyles.ContainsKey(name))
             {
-                resourceStorage.RegisterResource(name, path, assembly ?? Assembly.GetExecutingAssembly());
-                CalculateResourceHash(name);
+                return;
             }
+
+            // Content must reach storage before the name becomes visible in the location
+            // registry; otherwise concurrent (or failed) registrations leave RenderHeaders /
+            // RenderBodyResource looking up a name that ResourceStorage never received.
+            resourceStorage.RegisterResource(name, path, assembly ?? Assembly.GetExecutingAssembly());
+            CalculateResourceHash(name);
+            resourceStyles.TryAdd(name, resourceLocation);
         }
 
         public void AddScriptResource(string name, string path, AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null)
         {
-            if (resourceScripts.TryAdd(name, resourceLocation))
+            if (resourceScripts.ContainsKey(name))
             {
-                resourceStorage.RegisterResource(name, path, assembly ?? Assembly.GetExecutingAssembly());
-                CalculateResourceHash(name);
+                return;
             }
+
+            resourceStorage.RegisterResource(name, path, assembly ?? Assembly.GetExecutingAssembly());
+            CalculateResourceHash(name);
+            resourceScripts.TryAdd(name, resourceLocation);
         }
 
         public void AddJsCode(string resourceName, string jsCode, AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null)
         {
-            if (resourceScripts.TryAdd(resourceName, resourceLocation))
+            if (resourceScripts.ContainsKey(resourceName))
             {
-                resourceStorage.RegisterResource(resourceName, jsCode);
-                CalculateResourceHash(resourceName, jsCode);
+                return;
             }
+
+            resourceStorage.RegisterResource(resourceName, jsCode);
+            CalculateResourceHash(resourceName, jsCode);
+            resourceScripts.TryAdd(resourceName, resourceLocation);
         }
 
         public void AddJsCodeFromTemplate<T>(
@@ -52,21 +64,24 @@ namespace AlienFruit.Astra.Core
             AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null) 
             where T : class
         {
-            if (resourceScripts.TryAdd(resourceName, resourceLocation))
+            if (resourceScripts.ContainsKey(resourceName))
             {
-                var resourceAssembly = assembly ?? Assembly.GetExecutingAssembly();
-                using var stream = resourceAssembly.GetManifestResourceStream(templatePath)
-                    ?? throw new InvalidOperationException($"There is no resource with path: {templatePath}");
-
-                using var reader = new StreamReader(stream);
-                var rawTemplate = reader.ReadToEnd();
-                var template = Template.Parse(rawTemplate);
-                var scriptContent = template.Render(specification, x => x.Name)
-                    ?? throw new InvalidOperationException("Result script cannot be null");
-                resourceStorage.RegisterResource(resourceName, scriptContent);
-
-                CalculateResourceHash(resourceName, scriptContent);
+                return;
             }
+
+            var resourceAssembly = assembly ?? Assembly.GetExecutingAssembly();
+            using var stream = resourceAssembly.GetManifestResourceStream(templatePath)
+                ?? throw new InvalidOperationException($"There is no resource with path: {templatePath}");
+
+            using var reader = new StreamReader(stream);
+            var rawTemplate = reader.ReadToEnd();
+            var template = Template.Parse(rawTemplate);
+            var scriptContent = template.Render(specification, x => x.Name)
+                ?? throw new InvalidOperationException("Result script cannot be null");
+
+            resourceStorage.RegisterResource(resourceName, scriptContent);
+            CalculateResourceHash(resourceName, scriptContent);
+            resourceScripts.TryAdd(resourceName, resourceLocation);
         }
 
         public bool IsResourceExists(string name)

@@ -1,6 +1,11 @@
 ﻿using System.IO;
 using System.Text.Encodings.Web;
+using AlienFruit.Astra.Core;
+using AlienFruit.Astra.Core.ResourceCompressors;
 using AlienFruit.Astra.Tests.Infrastructure;
+using AlienFruit.Astra.ViewBox;
+using AlienFruit.Astra.ViewBoxLink;
+using Microsoft.AspNetCore.Http;
 
 namespace AlienFruit.Astra.Tests.UnitTests;
 
@@ -20,73 +25,6 @@ public class AstraEngineTests : AstraTestBase
             "load-check.js",
             "AlienFruit.Astra.Core.Resources.load-check.js",
             AstraResourceLocation.Body), Times.Once);
-    }
-
-    [Fact]
-    public void AddViewBox_WithViewBoxSpecification_AddJsCodeWithCorrectResourceNamePathAndSpec()
-    {
-        // Arrange
-        var engine = CreateAstraEngine();
-        var specification = new ViewBoxSpecification
-        {
-            Id = "test-viewbox",
-            ConnectionErrorMessage = "Connection error"
-        };
-
-        // Act
-        engine.AddViewBox(specification);
-
-        // Assert
-        HtmlResourceRendererMock.Verify(x => x.AddJsCodeFromTemplate(
-            $"viewbox-init-{specification.Id}.js",
-            ViewBoxSpecification.InitScriptTemplatePath,
-            specification), Times.Once);
-    }
-
-    [Fact]
-    public void AddViewBoxLink_WithViewBoxLinkSpecification_AddJsCodeWithCorrectResourceNamePathAndSpec()
-    {
-        // Arrange
-        var engine = CreateAstraEngine();
-        var specification = new ViewBoxLinkSpecification
-        {
-            Id = "test-link",
-            ViewBoxId = "test-viewbox",
-            Uri = new Uri("/test", UriKind.Relative)
-        };
-
-        // Act
-        engine.AddViewBoxLink(specification);
-
-        // Assert
-        HtmlResourceRendererMock.Verify(x => x.AddJsCodeFromTemplate(
-            $"viewbox-link-init-{specification.Id}.js",
-            ViewBoxLinkSpecification.InitScriptTemplatePath,
-            specification), Times.Once);
-    }
-
-    [Fact]
-    public void AddViewBoxLink_WithDuplicateSpecification_AddJsCodeOnce()
-    {
-        // Arrange
-        var engine = CreateAstraEngine();
-        var specification = new ViewBoxLinkSpecification
-        {
-            Id = "test-link",
-            ViewBoxId = "test-viewbox",
-            Uri = new Uri("/test", UriKind.Relative)
-        };
-
-        // Act
-        engine
-            .AddViewBoxLink(specification)
-            .AddViewBoxLink(specification);
-
-        // Assert
-        HtmlResourceRendererMock.Verify(x => x.AddJsCodeFromTemplate(
-            It.IsAny<string>(),
-            It.IsAny<string>(),
-            It.IsAny<ViewBoxLinkSpecification>()), Times.Once); // Only called once for first addition
     }
 
     [Fact]
@@ -178,65 +116,74 @@ public class AstraEngineTests : AstraTestBase
         result.Should().Be(defaultLayout);
     }
 
+    // Regression for the proven ViewBox collision: AstraEngine used to register
+    // "viewbox-init-{Id}.js" as a Header resource (AddViewBox), and ViewBox.Process
+    // registered the same name as Body → first-write-wins left location=Header,
+    // RenderBodyResource threw "resource ... was not registered as body resource".
+    // The engine now registers only startup assets; tag-helper init rendering stays
+    // per-instance, so mixed engine + tag helper usage must work.
+
     [Fact]
-    public void GetViewBoxLinkClass_ActiveLink_ReturnSelectedClass()
+    public void EngineRenderHeaders_DoesNotPreRegisterTagHelperInitNames()
     {
-        // Arrange
-        var engine = CreateAstraEngine();
-        var specification = new ViewBoxLinkSpecification
-        {
-            Id = "test-link",
-            ViewBoxId = "test-viewbox",
-            Uri = new Uri("/test", UriKind.Relative),
-            SelectedClassName = "active",
-            DefaultClassName = "inactive"
-        };
-        engine.AddViewBoxLink(specification);
+        var renderer = CreateRealRenderer();
+        var engine = new AstraEngine(renderer);
 
-        var context = new DefaultHttpContext();
-        context.Request.Path = "/test";
+        engine.RenderHeaders();
 
-        // Act
-        var result = engine.GetViewBoxLinkClass(context, "test-link");
-
-        // Assert
-        result.Should().Be("active");
+        renderer.IsResourceExists("viewbox.js").Should().BeTrue();
+        renderer.IsResourceExists("viewbox-init-main.js").Should().BeFalse();
+        renderer.IsResourceExists("viewbox-link-init-home").Should().BeFalse();
     }
 
     [Fact]
-    public void GetViewBoxLinkClass_InactiveLink_ReturnDefaultClass()
+    public void RenderHeaders_Then_ViewBoxTagHelper_DoesNotThrow()
     {
-        // Arrange
-        var engine = CreateAstraEngine();
-        var specification = new ViewBoxLinkSpecification
+        // The exact mixed-usage crash from the bug report: engine headers first,
+        // then <view-box id="main"> and <view-box-link> rendered through the real
+        // renderer/storage pipeline. Before the fix the box threw ArgumentException.
+        var renderer = CreateRealRenderer();
+        var compressor = new StubCompressor();
+        var engine = new AstraEngine(renderer);
+        engine.RenderHeaders();
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Path = "/Home";
+
+        var viewBox = new AlienFruit.Astra.ViewBox.ViewBox(renderer, compressor)
         {
-            Id = "test-link",
-            ViewBoxId = "test-viewbox",
-            Uri = new Uri("/test", UriKind.Relative),
-            SelectedClassName = "active",
-            DefaultClassName = "inactive"
+            Id = "main"
         };
-        engine.AddViewBoxLink(specification);
+        var boxOutput = CreateTagHelperOutput("view-box");
+        var boxAct = () => viewBox.Process(CreateTagHelperContext("view-box"), boxOutput);
 
-        var context = new DefaultHttpContext();
-        context.Request.Path = "/other";
+        var link = new AlienFruit.Astra.ViewBoxLink.ViewBoxLink(
+            renderer, new HttpContextAccessor { HttpContext = httpContext })
+        {
+            Id = "home",
+            Uri = "/Home",
+            ViewBoxId = "main",
+            DefaultClassName = "nav-link",
+            SelectedClassName = "nav-link active"
+        };
+        var linkOutput = CreateTagHelperOutput("view-box-link");
+        var linkAct = () => link.Process(CreateTagHelperContext("view-box-link"), linkOutput);
 
-        // Act
-        var result = engine.GetViewBoxLinkClass(context, "test-link");
+        boxAct.Should().NotThrow();
+        linkAct.Should().NotThrow();
 
-        // Assert
-        result.Should().Be("inactive");
+        // init scripts are rendered inline into the helper output (Body), not served from Header
+        WriteTo(boxOutput).Should().Contain("ViewBoxRegistry.create('main'");
+        WriteTo(linkOutput).Should().Contain("registerUri('/Home', 'home'");
     }
 
-    [Fact]
-    public void GetViewBoxLinkClass_NonExistentLink_ThrowException()
-    {
-        // Arrange
-        var engine = CreateAstraEngine();
-        var context = new DefaultHttpContext();
+    private HtmlResourceRenderer CreateRealRenderer() =>
+        new(new ResourceStorage(new StubCompressor()), CreateAstraConfiguration());
 
-        // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => engine.GetViewBoxLinkClass(context, "non-existent"));
-        exception.Message.Should().Contain("There is no NavLink with id:non-existent");
+    private static string WriteTo(Microsoft.AspNetCore.Razor.TagHelpers.TagHelperOutput output)
+    {
+        using var writer = new StringWriter();
+        output.PostContent.WriteTo(writer, HtmlEncoder.Default);
+        return writer.ToString();
     }
 }

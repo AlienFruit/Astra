@@ -201,6 +201,37 @@ public class HtmlResourceRendererTests : AstraTestBase
     }
 
     [Fact]
+    public void AddJsCode_BodyLocation_DoesNotComputeVersion()
+    {
+        // Body resources are inlined by RenderBodyResource — their version is never read,
+        // so no hash must be computed and no ?v= must appear in the URL
+        var configuration = CreateAstraConfiguration(enableVersioning: true);
+        var renderer = new HtmlResourceRenderer(ResourceStorageMock.Object, configuration);
+
+        renderer.AddJsCode("body.js", "console.log('body');", AstraResourceLocation.Body);
+        renderer.AddJsCode("header.js", "console.log('header');", AstraResourceLocation.Header);
+
+        renderer.GetResourceUrl("body.js").Should().Be("/astra/body.js");
+        renderer.GetResourceUrl("header.js").Should().StartWith("/astra/header.js?v=");
+    }
+
+    [Fact]
+    public void CalculateResourceHash_StorageThrows_VersionStaysEmpty()
+    {
+        // A per-node timestamp fallback produced different ?v= on different nodes
+        // (cache thrashing). On hash failure the resource must be served WITHOUT version.
+        var configuration = CreateAstraConfiguration(enableVersioning: true);
+        var renderer = new HtmlResourceRenderer(ResourceStorageMock.Object, configuration);
+        var name = "broken.js";
+        ResourceStorageMock.Setup(x => x.Contains(name)).Returns(true);
+        ResourceStorageMock.Setup(x => x.OpenRead(name)).Throws<IOException>();
+
+        renderer.AddScriptResource(name, "Missing.Embedded.Path.js");
+
+        renderer.GetResourceUrl(name).Should().Be("/astra/broken.js");
+    }
+
+    [Fact]
     public void GetResourceUrl_VersioningDisabled_ReturnUrlWithoutVersion()
     {
         // Arrange

@@ -1,6 +1,7 @@
 using AlienFruit.Astra.Abstractions;
 using AlienFruit.Astra.Configuration;
 using Microsoft.AspNetCore.Html;
+using Microsoft.Extensions.Logging;
 using Scriban;
 using System.Collections.Concurrent;
 using System.Reflection;
@@ -11,11 +12,11 @@ namespace AlienFruit.Astra.Core
 {
     internal class HtmlResourceRenderer(
         IResourceStorage resourceStorage,
-        AstraConfiguration configuration) : IHtmlResourceRenderer
+        AstraConfiguration configuration,
+        ILogger<HtmlResourceRenderer>? logger = null) : IHtmlResourceRenderer
     {
         private readonly ConcurrentDictionary<string, AstraResourceLocation> resourceStyles = new();
         private readonly ConcurrentDictionary<string, AstraResourceLocation> resourceScripts = new();
-        private readonly ConcurrentDictionary<string, AstraResourceLocation> resourceHtml = new();
         private readonly ConcurrentDictionary<string, string> resourceHashes = new();
 
         public void AddStylesheetResource(string name, string path, AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null)
@@ -29,7 +30,7 @@ namespace AlienFruit.Astra.Core
             // registry; otherwise concurrent (or failed) registrations leave RenderHeaders /
             // RenderBodyResource looking up a name that ResourceStorage never received.
             resourceStorage.RegisterResource(name, path, assembly ?? Assembly.GetExecutingAssembly());
-            CalculateResourceHash(name);
+            CalculateResourceHash(name, resourceLocation);
             resourceStyles.TryAdd(name, resourceLocation);
         }
 
@@ -41,7 +42,7 @@ namespace AlienFruit.Astra.Core
             }
 
             resourceStorage.RegisterResource(name, path, assembly ?? Assembly.GetExecutingAssembly());
-            CalculateResourceHash(name);
+            CalculateResourceHash(name, resourceLocation);
             resourceScripts.TryAdd(name, resourceLocation);
         }
 
@@ -53,7 +54,7 @@ namespace AlienFruit.Astra.Core
             }
 
             resourceStorage.RegisterResource(resourceName, jsCode);
-            CalculateResourceHash(resourceName, jsCode);
+            CalculateResourceHash(resourceName, resourceLocation, jsCode);
             resourceScripts.TryAdd(resourceName, resourceLocation);
         }
 
@@ -80,7 +81,7 @@ namespace AlienFruit.Astra.Core
                 ?? throw new InvalidOperationException("Result script cannot be null");
 
             resourceStorage.RegisterResource(resourceName, scriptContent);
-            CalculateResourceHash(resourceName, scriptContent);
+            CalculateResourceHash(resourceName, resourceLocation, scriptContent);
             resourceScripts.TryAdd(resourceName, resourceLocation);
         }
 
@@ -167,8 +168,15 @@ namespace AlienFruit.Astra.Core
             return string.Empty;
         }
 
-        private void CalculateResourceHash(string resourceName, string? content = null)
+        private void CalculateResourceHash(string resourceName, AstraResourceLocation resourceLocation, string? content = null)
         {
+            // Body resources are inlined by RenderBodyResource — their version is never
+            // read, so the SHA256 pass would be pure cost.
+            if (resourceLocation != AstraResourceLocation.Header)
+            {
+                return;
+            }
+
             if (!configuration.EnableVersioning || string.IsNullOrEmpty(configuration.ResourceVersion) == false)
             {
                 return;
@@ -181,11 +189,14 @@ namespace AlienFruit.Astra.Core
                 var hash = Convert.ToBase64String(hashBytes).Replace("+", "-").Replace("/", "_").Replace("=", "")[..32];
                 resourceHashes.TryAdd(resourceName, hash);
             }
-            catch
+            catch (Exception ex)
             {
-                // If hash calculation failed, use timestamp
-                var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                resourceHashes.TryAdd(resourceName, timestamp.ToString());
+                // A per-node timestamp fallback produced different ?v= values on different
+                // nodes (cache thrashing). On failure the resource is served WITHOUT a
+                // version parameter instead.
+                logger?.LogError(ex,
+                    "Failed to calculate the content version hash for resource '{ResourceName}'. It will be served without a version parameter.",
+                    resourceName);
             }
         }
     }

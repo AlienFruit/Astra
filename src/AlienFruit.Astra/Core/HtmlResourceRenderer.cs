@@ -34,10 +34,9 @@ namespace AlienFruit.Astra.Core
 
         public void AddResource(string name, string path, AstraResourceLocation resourceLocation, Assembly? assembly = null)
         {
-
             if (this.entries.TryGetValue(name, out var existing))
             {
-                //EnsureSameRegistration(existing, kind, resourceLocation);
+                ThrowIfContentDiffers(name, existing, () => ComputeVersionFromStorage(name));
                 return;
             }
 
@@ -117,6 +116,7 @@ namespace AlienFruit.Astra.Core
         {
             if (this.entries.TryGetValue(resourceName, out var existing))
             {
+                ThrowIfContentDiffers(resourceName, existing, () => ComputeVersion(RenderTemplateToString(templatePath, specification, assembly)));
                 return;
             }
 
@@ -139,6 +139,19 @@ namespace AlienFruit.Astra.Core
             var version = ComputeVersionFromStorage(resourceName);
             var entry = new ResourceEntry(resourceName, kind, resourceLocation, version);
             this.entries.TryAdd(resourceName, entry);
+        }
+
+        private string RenderTemplateToString(string templatePath, object specification, Assembly? assembly)
+        {
+            var resourceAssembly = assembly ?? Assembly.GetExecutingAssembly();
+            using var stream = resourceAssembly.GetManifestResourceStream(templatePath)
+                ?? throw new InvalidOperationException($"There is no resource with path: {templatePath}");
+            using var reader = new StreamReader(stream);
+            var rawTemplate = reader.ReadToEnd();
+            var template = Template.Parse(rawTemplate);
+            var result = template.Render(specification, x => x.Name)
+                ?? throw new InvalidOperationException("Result script cannot be null");
+            return result;
         }
 
         /// <summary>
@@ -201,6 +214,17 @@ namespace AlienFruit.Astra.Core
         {
             var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(content));
             return Convert.ToBase64String(hashBytes).Replace("+", "-").Replace("/", "_").Replace("=", "")[..32];
+        }
+
+        private void ThrowIfContentDiffers(string name, ResourceEntry existing, Func<string> computeNewVersion)
+        {
+            var newVersion = computeNewVersion();
+            if (!string.Equals(existing.Version, newVersion, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    $"Resource '{name}' is already registered with different content. " +
+                    $"Use a unique name per resource or ensure identical content.");
+            }
         }
     }
 }

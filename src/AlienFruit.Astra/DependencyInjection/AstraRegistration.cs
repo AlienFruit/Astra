@@ -45,6 +45,7 @@ namespace AlienFruit.Astra.DependencyInjection
             builder.Services
                 .AddSingleton<IResourceStorage, ResourceStorage>()
                 .AddSingleton<IHtmlResourceRenderer, HtmlResourceRenderer>()
+                .AddSingleton<IInitScriptRenderer, InitScriptRenderer>()
                 .AddSingleton<AstraEngine>()
                 .AddHttpContextAccessor();
 

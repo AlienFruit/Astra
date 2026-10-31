@@ -1,6 +1,4 @@
 using AlienFruit.Astra.Abstractions;
-using AlienFruit.Astra.Core;
-using AlienFruit.Astra.ViewBoxLinkGroup;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 
@@ -11,7 +9,7 @@ namespace AlienFruit.Astra.ViewBoxLink
     /// Provides automatic active state management and AJAX-based navigation.
     /// </summary>
     [HtmlTargetElement("view-box-link")]
-    public class ViewBoxLink(IHtmlResourceRenderer htmlResourceRenderer, IHttpContextAccessor httpContextAccessor) : TagHelper
+    public class ViewBoxLink(IInitScriptRenderer initScriptRenderer, IHttpContextAccessor httpContextAccessor) : TagHelper
     {
         /// <summary>
         /// Gets or sets the unique identifier for this view-box-link element.
@@ -108,12 +106,8 @@ namespace AlienFruit.Astra.ViewBoxLink
                 output.Attributes.SetAttribute("class", GetClassName(httpContextAccessor.HttpContext, specification));
             }
 
-            htmlResourceRenderer.AddJsCodeFromTemplate(
-                $"viewbox-link-init-{Id}.js", 
-                ViewBoxLinkSpecification.InitScriptTemplatePath, 
-                specification, AstraResourceLocation.Body);
-
-            output.PostContent.AppendHtml(htmlResourceRenderer.RenderBodyResource($"viewbox-link-init-{Id}.js"));
+            var script = initScriptRenderer.Render(specification);
+            output.PostContent.AppendHtml($"<script>{script}</script>");
         }
 
         private string GetClassName(HttpContext? context, ViewBoxLinkSpecification specification)

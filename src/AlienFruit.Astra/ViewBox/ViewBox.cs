@@ -2,7 +2,6 @@ using AlienFruit.Astra.Abstractions;
 using AlienFruit.Astra.Models;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using System.Reflection;
-
 namespace AlienFruit.Astra.ViewBox
 {
     /// <summary>
@@ -10,12 +9,12 @@ namespace AlienFruit.Astra.ViewBox
     /// The view-box acts as a container for AJAX-loaded content and provides event handling for loading states.
     /// </summary>
     [HtmlTargetElement("view-box")]
-    public class ViewBox(IHtmlResourceRenderer htmlResourceRenderer, IResourceCompressor resourceCompressor) : TagHelper
+    public class ViewBox(IInitScriptRenderer initScriptRenderer, IResourceCompressor resourceCompressor) : TagHelper
     {
         private const char space = ' ';
-        private static Resource defaultConnettionError = new EmbeddedResource(
-            name: "ViewBoxError.html", 
-            path: "AlienFruit.Astra.ViewBox.Resources.ViewBoxError.html", 
+        private static Resource defaultConnectionError = new EmbeddedResource(
+            name: "ViewBoxError.html",
+            path: "AlienFruit.Astra.ViewBox.Resources.ViewBoxError.html",
             assembly: Assembly.GetExecutingAssembly());
 
         /// <summary>
@@ -138,17 +137,13 @@ namespace AlienFruit.Astra.ViewBox
                 ConnectionErrorMessage = GetConnectionErrorMessage()
             };
 
-            htmlResourceRenderer.AddJsCodeFromTemplate(
-                $"viewbox-init-{specification.Id}.js",
-                ViewBoxSpecification.InitScriptTemplatePath,
-                specification, AstraResourceLocation.Body);
-
-            output.PostContent.AppendHtml(htmlResourceRenderer.RenderBodyResource($"viewbox-init-{specification.Id}.js"));
+            var script = initScriptRenderer.Render(specification);
+            output.PostContent.AppendHtml($"<script>{script}</script>");
         }
 
         private string GetConnectionErrorMessage()
         {
-            var content = resourceCompressor.CompressToString(this.ConnectionErrorMessageResource ?? defaultConnettionError);
+            var content = resourceCompressor.CompressToString(this.ConnectionErrorMessageResource ?? defaultConnectionError);
             return content.Replace('\r', space).Replace('\n', space);
         }
     }

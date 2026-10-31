@@ -1,17 +1,11 @@
 using AlienFruit.Astra.Abstractions;
-using AlienFruit.Astra.Core;
-using AlienFruit.Astra.ViewBoxLink;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 
 namespace AlienFruit.Astra.ViewBoxLinkGroup
 {
-    /// <summary>
-    /// Tag helper for creating groups of view-box-link elements that change style when any of the linked elements is active.
-    /// Monitors multiple view-box-link elements and applies active styling when at least one is selected.
-    /// </summary>
     [HtmlTargetElement("view-box-link-group")]
-    public class ViewBoxLinkGroup(IHtmlResourceRenderer htmlResourceRenderer, IHttpContextAccessor httpContextAccessor) : TagHelper
+    public class ViewBoxLinkGroup(IInitScriptRenderer initScriptRenderer, IHttpContextAccessor httpContextAccessor) : TagHelper
     {
         /// <summary>
         /// Gets or sets the unique identifier for this view-box-link-group element.
@@ -96,12 +90,8 @@ namespace AlienFruit.Astra.ViewBoxLinkGroup
                 output.Attributes.SetAttribute("class", ViewBoxLinkGroup.GetClassName(httpContextAccessor.HttpContext, specification));
             }
 
-            htmlResourceRenderer.AddJsCodeFromTemplate(
-                $"viewbox-link-group-init--{Id}.js",
-                ViewBoxLinkGroupSpecification.InitScriptTemplatePath, 
-                specification, AstraResourceLocation.Body);
-
-            output.PostContent.AppendHtml(htmlResourceRenderer.RenderBodyResource($"viewbox-link-group-init--{Id}.js"));
+            var script = initScriptRenderer.Render(specification);
+            output.PostContent.AppendHtml($"<script>{script}</script>");
         }
 
         private static string GetClassName(HttpContext? context, ViewBoxLinkGroupSpecification specification)

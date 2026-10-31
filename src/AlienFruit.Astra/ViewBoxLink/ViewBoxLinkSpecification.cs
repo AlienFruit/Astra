@@ -1,8 +1,10 @@
-﻿namespace AlienFruit.Astra.ViewBoxLink
+﻿using AlienFruit.Astra.Abstractions;
+
+namespace AlienFruit.Astra.ViewBoxLink
 {
-    public class ViewBoxLinkSpecification
+    public class ViewBoxLinkSpecification : ISpecification
     {
-        public const string InitScriptTemplatePath = "AlienFruit.Astra.ViewBoxLink.Resources.viewboxlink-init-script.template.js";
+        private const string initScriptTemplatePath = "AlienFruit.Astra.ViewBoxLink.Resources.viewboxlink-init-script.template.js";
 
         public required string Id { get; set; }
         public required string ViewBoxId { get; set; }
@@ -11,5 +13,6 @@
         public string? DefaultClassName { get; set; }
         public string? OnClick { get; set; }
         public bool ScrollUp { get; set; } = true;
+        public string InitScriptTemplatePath => initScriptTemplatePath;
     }
 }

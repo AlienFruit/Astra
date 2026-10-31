@@ -17,30 +17,15 @@ namespace AlienFruit.Astra.Core
     {
         private readonly ConcurrentDictionary<string, Template> _templateCache = new();
 
-        public string Render<T>(T specification) where T : class
+        public string Render<T>(T specification) where T : ISpecification
         {
-            var specType = typeof(T);
-            var templatePath = GetTemplatePath(specType);
+            var templatePath = specification.InitScriptTemplatePath;
             var template = GetOrParseTemplate(templatePath);
             var result = template.Render(specification, x => x.Name)
                 ?? throw new InvalidOperationException("Result script cannot be null");
-
             return result;
         }
 
-        private static string GetTemplatePath(Type specType)
-        {
-            if (specType == typeof(ViewBoxSpecification))
-                return ViewBoxSpecification.InitScriptTemplatePath;
-
-            if (specType == typeof(ViewBoxLinkSpecification))
-                return ViewBoxLinkSpecification.InitScriptTemplatePath;
-
-            if (specType == typeof(ViewBoxLinkGroupSpecification))
-                return ViewBoxLinkGroupSpecification.InitScriptTemplatePath;
-
-            throw new ArgumentException($"No init script template registered for specification type '{specType.FullName}'.");
-        }
 
         private Template GetOrParseTemplate(string path)
         {

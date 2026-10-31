@@ -14,6 +14,6 @@ namespace AlienFruit.Astra.Abstractions
         /// <typeparam name="T">The specification type.</typeparam>
         /// <param name="specification">Component specification (e.g., ViewBoxSpecification, ViewBoxLinkSpecification, etc.)</param>
         /// <returns>Raw JavaScript content ready for inline rendering.</returns>
-        string Render<T>(T specification) where T : class;
+        string Render<T>(T specification) where T : ISpecification;
     }
 }

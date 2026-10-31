@@ -16,8 +16,6 @@ namespace AlienFruit.Astra.Core
     /// <see cref="ResourceEntry"/> published with a single <c>TryAdd</c>. A resource is
     /// either fully registered (name + kind + location + content source) or absent —
     /// a "half-registered" state is not expressible by construction.
-    /// <see cref="IResourceStorage"/> is kept as the serving mirror for the
-    /// <c>/astra/{name}</c> endpoint: Header registrations proxy into storage.
     /// </summary>
     internal class HtmlResourceRenderer(
         IResourceStorage resourceStorage,
@@ -26,7 +24,7 @@ namespace AlienFruit.Astra.Core
     {
         private readonly ConcurrentDictionary<string, ResourceEntry> entries = new();
 
-        private readonly Dictionary<string, AstraResourceKind> resourceVersionCache = new(StringComparer.OrdinalIgnoreCase)
+        private readonly Dictionary<string, AstraResourceKind> resourceKindByExtensionMap = new(StringComparer.OrdinalIgnoreCase)
         {
             {".css", AstraResourceKind.Stylesheet },
             { ".js", AstraResourceKind.Script },
@@ -40,17 +38,15 @@ namespace AlienFruit.Astra.Core
                 return;
             }
 
-            if (!resourceVersionCache.TryGetValue(Path.GetExtension(name), out var kind))
+            if (!resourceKindByExtensionMap.TryGetValue(Path.GetExtension(path), out var kind))
             {
                 throw new ArgumentException($"Unsupported resource extension for '{name}'. Only .css and .js are allowed.");
             }
 
             var resourceAssembly = assembly ?? Assembly.GetExecutingAssembly();
-
             resourceStorage.RegisterResource(name, path, resourceAssembly);
             var version = ComputeVersionFromStorage(name);
             var entry = new ResourceEntry(name, kind, resourceLocation, version);
-
             this.entries.TryAdd(name, entry);
         }
 
@@ -120,9 +116,9 @@ namespace AlienFruit.Astra.Core
                 return;
             }
 
-            if (!resourceVersionCache.TryGetValue(Path.GetExtension(resourceName), out var kind))
+            if (!resourceKindByExtensionMap.TryGetValue(Path.GetExtension(templatePath), out var kind))
             {
-                throw new ArgumentException($"Unsupported resource extension for '{resourceName}'. Only .css and .js are allowed.");
+                throw new ArgumentException($"Unsupported resource extension for '{templatePath}'. Only .css and .js are allowed.");
             }
 
             var resourceAssembly = assembly ?? Assembly.GetExecutingAssembly();
@@ -154,11 +150,6 @@ namespace AlienFruit.Astra.Core
             return result;
         }
 
-        /// <summary>
-        /// Body content resolves from the entry's own source — the same Resource the old
-        /// storage round-trip built, so compressor behavior (extension-driven Nuglify)
-        /// is preserved byte-for-byte.
-        /// </summary>
         private string ResolveContent(string resourceName)
         {
             if (resourceStorage.Contains(resourceName) == false)
@@ -178,7 +169,6 @@ namespace AlienFruit.Astra.Core
                 return string.Empty;
             }
 
-            // If global version is specified, use it
             if (!string.IsNullOrEmpty(configuration.ResourceVersion))
             {
                 return $"?v={configuration.ResourceVersion}";
@@ -187,44 +177,35 @@ namespace AlienFruit.Astra.Core
             return string.IsNullOrEmpty(entry.Version) ? string.Empty : $"?v={entry.Version}";
         }
 
+        private void ThrowIfContentDiffers(string name, ResourceEntry existing, Func<string> versionFunc)
+        {
+            var newVersion = versionFunc();
+            if (!string.Equals(existing.Version, newVersion, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"Resource '{name}' version mismatch. Expected {existing.Version}, got {newVersion}");
+            }
+        }
 
-        /// <summary>
-        /// Hash source for embedded (path-registered) resources is storage.OpenRead — the
-        /// compressed bytes, exactly as served by the /astra endpoint. A per-node timestamp
-        /// fallback would differ across nodes and thrash caches, so on failure the resource
-        /// is served WITHOUT a version parameter (logged once; Lazy caches the empty result).
-        /// </summary>
         private string ComputeVersionFromStorage(string resourceName)
         {
             try
             {
-                var content = ResolveContent(resourceName);
-                return ComputeVersion(content);     
+                using var stream = resourceStorage.OpenRead(resourceName);
+                using var sha256 = SHA256.Create();
+                var hashBytes = sha256.ComputeHash(stream);
+                return BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
             }
-            catch (Exception ex)
+            catch
             {
-                logger?.LogError(ex,
-                    "Failed to calculate the content version hash for resource '{ResourceName}'. It will be served without a version parameter.",
-                    resourceName);
                 return string.Empty;
             }
         }
 
-        private static string ComputeVersion(string content)
+        private string ComputeVersion(string content)
         {
-            var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(content));
-            return Convert.ToBase64String(hashBytes).Replace("+", "-").Replace("/", "_").Replace("=", "")[..32];
-        }
-
-        private void ThrowIfContentDiffers(string name, ResourceEntry existing, Func<string> computeNewVersion)
-        {
-            var newVersion = computeNewVersion();
-            if (!string.Equals(existing.Version, newVersion, StringComparison.Ordinal))
-            {
-                throw new InvalidOperationException(
-                    $"Resource '{name}' is already registered with different content. " +
-                    $"Use a unique name per resource or ensure identical content.");
-            }
+            using var sha256 = SHA256.Create();
+            var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(content));
+            return BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
         }
     }
 }

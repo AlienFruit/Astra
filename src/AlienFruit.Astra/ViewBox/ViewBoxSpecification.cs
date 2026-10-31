@@ -1,9 +1,11 @@
-﻿namespace AlienFruit.Astra.ViewBox
+﻿using AlienFruit.Astra.Abstractions;
+
+namespace AlienFruit.Astra.ViewBox
 {
-    public class ViewBoxSpecification
+    public class ViewBoxSpecification : ISpecification
     {
         public const string JsResourcePath = "AlienFruit.Astra.ViewBox.Resources.viewbox.js";
-        public const string InitScriptTemplatePath = "AlienFruit.Astra.ViewBox.Resources.viewbox-init-script.template.js";
+        private const string initScriptTemplatePath = "AlienFruit.Astra.ViewBox.Resources.viewbox-init-script.template.js";
 
         public required string Id { get; set; }
         public string? OnStartLoadingJsFunction { get; set; }
@@ -15,5 +17,6 @@
         public string? ParrentViewBoxId { get; set; }
         public required string ConnectionErrorMessage { get; set; }
         public bool LockAfterFirstLoad { get; set; } = false;
+        public string InitScriptTemplatePath => initScriptTemplatePath;
     }
 }

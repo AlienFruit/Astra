@@ -184,7 +184,7 @@ public class AstraConfigurationTests
         var testJsCode = "console.log('test');";
         resourceStorage.Setup(x => x.Contains("test.js")).Returns(true);
         resourceStorage.Setup(x => x.OpenRead("test.js")).Returns(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(testJsCode)));
-        renderer.AddJsCode("test.js", testJsCode);
+        renderer.AddJsCodeFromTemplate("test.js", testJsCode);
 
         // Act
         var url = renderer.GetResourceUrl("test.js");

@@ -16,11 +16,23 @@ public abstract class AstraTestBase
     protected Mock<IResourceCompressor> ResourceCompressorMock { get; }
     protected Mock<IResourceStorage> ResourceStorageMock { get; }
 
+    protected Mock<IInitScriptRenderer> InitScriptRendererMock { get; }
+
     protected AstraTestBase()
     {
         HtmlResourceRendererMock = new Mock<IHtmlResourceRenderer>();
         ResourceCompressorMock = new Mock<IResourceCompressor>();
         ResourceStorageMock = new Mock<IResourceStorage>();
+        InitScriptRendererMock = new Mock<IInitScriptRenderer>();
+    }
+
+    /// <summary>
+    /// Настраивает InitScriptRendererMock для возврата указанного скрипта
+    /// </summary>
+    protected void SetupInitScriptRenderer<T>(string scriptContent) where T : class
+    {
+        InitScriptRendererMock.Setup(x => x.Render(It.IsAny<T>()))
+            .Returns(scriptContent);
     }
 
     /// <summary>

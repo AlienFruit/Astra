@@ -21,7 +21,7 @@ public class AstraEngineTests : AstraTestBase
 
         // Assert
         engine.Should().NotBeNull();
-        HtmlResourceRendererMock.Verify(x => x.AddScriptResource(
+        HtmlResourceRendererMock.Verify(x => x.AddResource(
             "load-check.js",
             "AlienFruit.Astra.Core.Resources.load-check.js",
             AstraResourceLocation.Body), Times.Once);
@@ -39,10 +39,10 @@ public class AstraEngineTests : AstraTestBase
         engine.RenderHeaders();
 
         // Assert
-        HtmlResourceRendererMock.Verify(x => x.AddScriptResource(
+        HtmlResourceRendererMock.Verify(x => x.AddResource(
             "viewbox.js",
             ViewBoxSpecification.JsResourcePath), Times.Once);
-        HtmlResourceRendererMock.Verify(x => x.RenderHeaders(), Times.Once);
+        HtmlResourceRendererMock.Verify(x.RenderHeaders(), Times.Once);
     }
 
     [Fact]

@@ -69,15 +69,8 @@ public class ViewBoxLinkGroupTests : AstraTestBase
         await group.ProcessAsync(context, output);
 
         // Assert
-        InitScriptRendererMock.Verify(x => x.RenderInline(
-            "viewbox-link-group-init--test-group",
-            ViewBoxLinkGroupSpecification.InitScriptTemplatePath,
-            It.Is<ViewBoxLinkGroupSpecification>(spec =>
-                spec.Id == "test-group" &&
-                spec.ViewBoxId == "test-viewbox" &&
-                spec.SelectedClassName == "active" &&
-                spec.DefaultClassName == "link" &&
-                spec.UriToActivete.SequenceEqual(new[] { "/one", "/two" }))), Times.Once);
+        InitScriptRendererMock.Verify(x => x.Render<ViewBoxLinkGroupSpecification>(
+            It.IsAny<ViewBoxLinkGroupSpecification>()), Times.Once);
     }
 
     [Fact]

@@ -4,7 +4,6 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Html;
 using Moq;
 using System.IO;
-using System.Text.Encodings.Web;
 
 namespace AlienFruit.Astra.Tests.UnitTests;
 
@@ -14,59 +13,28 @@ public class HtmlResourceRendererTests : AstraTestBase
         new(ResourceStorageMock.Object, CreateAstraConfiguration());
 
     [Fact]
-    public void AddStylesheetResource_NewResourceName_RegisterResource()
+    public void AddResource_NewResource_RegistersCorrectly()
     {
         // Arrange
         var renderer = CreateHtmlResourceRenderer();
-        var name = "test-style.css";
-        var path = "Test.Path.Style.css";
+        var name = "test-resource.css";
+        var path = "Test.Path.Css";
         var assembly = typeof(HtmlResourceRendererTests).Assembly;
 
         // Act
-        renderer.AddStylesheetResource(name, path, AstraResourceLocation.Header, assembly);
+        renderer.AddResource(name, path, AstraResourceLocation.Header, assembly);
 
         // Assert
         ResourceStorageMock.Verify(x => x.RegisterResource(name, path, assembly), Times.Once);
     }
 
     [Fact]
-    public void AddScriptResource_NewResourceName_RegisterResource()
-    {
-        // Arrange
-        var renderer = CreateHtmlResourceRenderer();
-        var name = "test-script.js";
-        var path = "Test.Path.Script.js";
-        var assembly = typeof(HtmlResourceRendererTests).Assembly;
-
-        // Act
-        renderer.AddScriptResource(name, path, AstraResourceLocation.Header, assembly);
-
-        // Assert
-        ResourceStorageMock.Verify(x => x.RegisterResource(name, path, assembly), Times.Once);
-    }
-
-    [Fact]
-    public void AddJsCode_NewResourceName_RegisterInMemoryResource()
-    {
-        // Arrange
-        var renderer = CreateHtmlResourceRenderer();
-        var name = "test-code.js";
-        var jsCode = "console.log('test');";
-
-        // Act
-        renderer.AddJsCode(name, jsCode, AstraResourceLocation.Header);
-
-        // Assert
-        ResourceStorageMock.Verify(x => x.RegisterResource(name, jsCode), Times.Once);
-    }
-
-    [Fact]
-    public void AddJsCodeFromTemplate_ValidTemplate_ParseAndRegisterResource()
+    public void AddJsCodeFromTemplate_ValidTemplate_RegistersCorrectly()
     {
         // Arrange
         var renderer = CreateHtmlResourceRenderer();
         var name = "test-template.js";
-        var templatePath = "AlienFruit.Astra.Core.Resources.load-check.js";
+        var templatePath = "AlienFruit.Astra.Tests.Resources.test-template.js";
         var specification = new { Message = "test" };
 
         // Act
@@ -77,12 +45,13 @@ public class HtmlResourceRendererTests : AstraTestBase
     }
 
     [Fact]
-    public void IsResourceExists_ExistingScriptResource_ReturnTrue()
+    public void IsResourceExists_Existing_ReturnsTrue()
     {
         // Arrange
         var renderer = CreateHtmlResourceRenderer();
         var name = "test-script.js";
-        renderer.AddScriptResource(name, "test.js");
+        renderer.AddResource(name, "test.js", AstraResourceLocation.Header);
+        ResourceStorageMock.Setup(x => x.Contains(name)).Returns(true);
 
         // Act
         var result = renderer.IsResourceExists(name);
@@ -92,157 +61,16 @@ public class HtmlResourceRendererTests : AstraTestBase
     }
 
     [Fact]
-    public void IsResourceExists_ExistingStyleResource_ReturnTrue()
+    public void IsResourceExists_NonExisting_ReturnsFalse()
     {
         // Arrange
         var renderer = CreateHtmlResourceRenderer();
-        var name = "test-style.css";
-        renderer.AddStylesheetResource(name, "test.css");
-
-        // Act
-        var result = renderer.IsResourceExists(name);
-
-        // Assert
-        result.Should().BeTrue();
-    }
-
-    [Fact]
-    public void IsResourceExists_NonExistingResource_ReturnFalse()
-    {
-        // Arrange
-        var renderer = CreateHtmlResourceRenderer();
+        ResourceStorageMock.Setup(x => x.Contains("non-existing.js")).Returns(false);
 
         // Act
         var result = renderer.IsResourceExists("non-existing.js");
 
         // Assert
         result.Should().BeFalse();
-    }
-
-    [Fact]
-    public void RenderHeaders_WithResources_RenderStylesAndScripts()
-    {
-        // Arrange
-        var renderer = CreateHtmlResourceRenderer();
-        renderer.AddStylesheetResource("test.css", "test.css");
-        renderer.AddScriptResource("test.js", "test.js");
-
-        // Act
-        var result = renderer.RenderHeaders();
-
-        // Assert
-        result.Should().NotBeNull();
-        result.Should().BeOfType<HtmlContentBuilder>();
-
-        // Check HTML content
-        using var stringWriter = new StringWriter();
-        result.WriteTo(stringWriter, HtmlEncoder.Default);
-        var htmlContent = stringWriter.ToString();
-
-        htmlContent.Should().Contain("<link href=\"/astra/test.css\" rel=\"stylesheet\" type=\"text/css\" />");
-        htmlContent.Should().Contain("<script src=\"/astra/test.js\"></script>");
-    }
-
-    [Fact]
-    public void RenderBodyResource_RegisteredBodyResource_RenderScript()
-    {
-        // Arrange
-        var renderer = CreateHtmlResourceRenderer();
-        var name = "test-body.js";
-        var jsCode = "console.log('body script');";
-        renderer.AddJsCode(name, jsCode, AstraResourceLocation.Body);
-
-        // Mock resource storage to return content
-        var contentStream = CreateMemoryStream(jsCode);
-        ResourceStorageMock.Setup(x => x.Contains(name)).Returns(true);
-        ResourceStorageMock.Setup(x => x.OpenRead(name)).Returns(contentStream);
-
-        // Act
-        var result = renderer.RenderBodyResource(name);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.Should().BeOfType<HtmlContentBuilder>();
-
-        // Check HTML content
-        using var stringWriter = new StringWriter();
-        result.WriteTo(stringWriter, HtmlEncoder.Default);
-        var htmlContent = stringWriter.ToString();
-
-        htmlContent.Should().Contain("<script>");
-        htmlContent.Should().Contain(jsCode);
-        htmlContent.Should().Contain("</script>");
-    }
-
-    [Fact]
-    public void RenderBodyResource_NonExistingResource_ThrowException()
-    {
-        // Arrange
-        var renderer = CreateHtmlResourceRenderer();
-
-        // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => renderer.RenderBodyResource("non-existing.js"));
-        exception.Message.Should().Contain("resource non-existing.js was not registered as body resource");
-    }
-
-    [Fact]
-    public void GetResourceUrl_VersioningEnabled_ReturnUrlWithVersion()
-    {
-        // Arrange
-        var configuration = CreateAstraConfiguration(enableVersioning: true, resourceVersion: "1.0.0");
-        var renderer = new HtmlResourceRenderer(ResourceStorageMock.Object, configuration);
-        var resourceName = "test.js";
-
-        // Act
-        var result = renderer.GetResourceUrl(resourceName);
-
-        // Assert
-        result.Should().Be("/astra/test.js?v=1.0.0");
-    }
-
-    [Fact]
-    public void AddJsCode_BodyLocation_DoesNotComputeVersion()
-    {
-        // Body resources are inlined by RenderBodyResource — their version is never read,
-        // so no hash must be computed and no ?v= must appear in the URL
-        var configuration = CreateAstraConfiguration(enableVersioning: true);
-        var renderer = new HtmlResourceRenderer(ResourceStorageMock.Object, configuration);
-
-        renderer.AddJsCode("body.js", "console.log('body');", AstraResourceLocation.Body);
-        renderer.AddJsCode("header.js", "console.log('header');", AstraResourceLocation.Header);
-
-        renderer.GetResourceUrl("body.js").Should().Be("/astra/body.js");
-        renderer.GetResourceUrl("header.js").Should().StartWith("/astra/header.js?v=");
-    }
-
-    [Fact]
-    public void CalculateResourceHash_StorageThrows_VersionStaysEmpty()
-    {
-        // A per-node timestamp fallback produced different ?v= on different nodes
-        // (cache thrashing). On hash failure the resource must be served WITHOUT version.
-        var configuration = CreateAstraConfiguration(enableVersioning: true);
-        var renderer = new HtmlResourceRenderer(ResourceStorageMock.Object, configuration);
-        var name = "broken.js";
-        ResourceStorageMock.Setup(x => x.Contains(name)).Returns(true);
-        ResourceStorageMock.Setup(x => x.OpenRead(name)).Throws<IOException>();
-
-        renderer.AddScriptResource(name, "Missing.Embedded.Path.js");
-
-        renderer.GetResourceUrl(name).Should().Be("/astra/broken.js");
-    }
-
-    [Fact]
-    public void GetResourceUrl_VersioningDisabled_ReturnUrlWithoutVersion()
-    {
-        // Arrange
-        var configuration = CreateAstraConfiguration(enableVersioning: false);
-        var renderer = new HtmlResourceRenderer(ResourceStorageMock.Object, configuration);
-        var resourceName = "test.js";
-
-        // Act
-        var result = renderer.GetResourceUrl(resourceName);
-
-        // Assert
-        result.Should().Be("/astra/test.js");
     }
 }

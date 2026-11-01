@@ -29,9 +29,9 @@ public abstract class AstraTestBase
     /// <summary>
     /// Настраивает InitScriptRendererMock для возврата указанного скрипта
     /// </summary>
-    protected void SetupInitScriptRenderer<T>(string scriptContent) where T : class
+    protected void SetupInitScriptRenderer<T>(T specification, string scriptContent) where T : class, ISpecification
     {
-        InitScriptRendererMock.Setup(x => x.Render(It.IsAny<T>()))
+        InitScriptRendererMock.Setup(x => x.Render(specification))
             .Returns(scriptContent);
     }
 

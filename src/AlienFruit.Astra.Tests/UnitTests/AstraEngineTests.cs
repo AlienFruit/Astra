@@ -39,10 +39,11 @@ public class AstraEngineTests : AstraTestBase
         engine.RenderHeaders();
 
         // Assert
-        HtmlResourceRendererMock.Verify(x => x.AddResource(
+        HtmlResourceRendererMock.Verify(m => m.AddResource(
             "viewbox.js",
-            ViewBoxSpecification.JsResourcePath), Times.Once);
-        HtmlResourceRendererMock.Verify(x.RenderHeaders(), Times.Once);
+            ViewBoxSpecification.JsResourcePath,
+            AstraResourceLocation.Header), Times.Once);
+        HtmlResourceRendererMock.Verify(m => m.RenderHeaders(), Times.Once);
     }
 
     [Fact]
@@ -123,21 +124,17 @@ public class AstraEngineTests : AstraTestBase
     // The engine now registers only startup assets; tag-helper init rendering stays
     // per-instance, so mixed engine + tag helper usage must work.
 
-    [Fact]
+[Fact]
     public void EngineRenderHeaders_DoesNotPreRegisterTagHelperInitNames()
     {
-        var renderer = CreateRealRenderer();
-        var engine = new AstraEngine(renderer);
-
-        engine.RenderHeaders();
-
-        renderer.IsResourceExists("viewbox.js").Should().BeTrue();
-        renderer.IsResourceExists("viewbox-init-main.js").Should().BeFalse();
-        renderer.IsResourceExists("viewbox-link-init-home").Should().BeFalse();
+        var engine = CreateAstraEngine();
+        engine.RenderHeaders().ToString().Should().Contain("viewbox.js");
+        engine.RenderHeaders().ToString().Should().NotContain("viewbox-init-main.js");
+        engine.RenderHeaders().ToString().Should().NotContain("viewbox-link-init-home");
     }
 
     [Fact]
-    public void RenderHeaders_Then_ViewBoxTagHelper_DoesNotThrow()
+    public void RenderHeaders_Then_ViewAccess_DoesNotThrow()
     {
         // The exact mixed-usage crash from the bug report: engine headers first,
         // then <view-box id="main"> and <view-box-link> rendered through the real
@@ -150,21 +147,23 @@ public class AstraEngineTests : AstraTestBase
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/Home";
 
-        var viewBox = new AlienFruit.Astra.ViewBox.ViewBox(renderer, compressor)
+        var viewBox = new AlienFruit.Astra.ViewBox.ViewBox(
+            InitScriptRendererMock.Object, 
+            ResourceCompressorMock.Object)
         {
             Id = "main"
         };
         var boxOutput = CreateTagHelperOutput("view-box");
         var boxAct = () => viewBox.Process(CreateTagHelperContext("view-box"), boxOutput);
 
+        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
         var link = new AlienFruit.Astra.ViewBoxLink.ViewBoxLink(
-            renderer, new HttpContextAccessor { HttpContext = httpContext })
+            InitScriptRendererMock.Object, 
+            httpContextAccessorMock.Object)
         {
             Id = "home",
             Uri = "/Home",
-            ViewBoxId = "main",
-            DefaultClassName = "nav-link",
-            SelectedClassName = "nav-link active"
+            ViewBoxId = "main"
         };
         var linkOutput = CreateTagHelperOutput("view-box-link");
         var linkAct = () => link.Process(CreateTagHelperContext("view-box-link"), linkOutput);

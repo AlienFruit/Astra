@@ -162,10 +162,10 @@ public class AstraConfigurationTests
         var renderer = new HtmlResourceRenderer(resourceStorage.Object, config);
 
         // Act
-        var url = renderer.GetResourceUrl("test.js");
+        var html = renderer.RenderHeaders().ToString();
 
         // Assert
-        url.Should().StartWith("/my-assets/test.js");
+        html.Should().Contain("/my-assets/test.js");
     }
 
     [Fact]
@@ -184,14 +184,14 @@ public class AstraConfigurationTests
         var testJsCode = "console.log('test');";
         resourceStorage.Setup(x => x.Contains("test.js")).Returns(true);
         resourceStorage.Setup(x => x.OpenRead("test.js")).Returns(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(testJsCode)));
-        renderer.AddJsCodeFromTemplate("test.js", testJsCode);
+        renderer.AddResource("test.js", "test.js", AstraResourceLocation.Header);
 
         // Act
-        var url = renderer.GetResourceUrl("test.js");
+        var html = renderer.RenderHeaders().ToString();
 
         // Assert
-        url.Should().Contain("?v=");
-        url.Should().MatchRegex(@"\?v=[a-zA-Z0-9_-]{32}$"); // Base64 URL-safe hash truncated to 32 chars
+        html.Should().Contain("?v=");
+        html.Should().MatchRegex(@"\?v=[a-zA-Z0-9_-]{32}$");
     }
 
     [Fact]
@@ -207,10 +207,10 @@ public class AstraConfigurationTests
         var renderer = new HtmlResourceRenderer(resourceStorage.Object, config);
 
         // Act
-        var url = renderer.GetResourceUrl("test.js");
+        var html = renderer.RenderHeaders().ToString();
 
         // Assert
-        url.Should().Be("/astra/test.js?v=2.1.0");
+        html.Should().Contain("/astra/test.js?v=2.1.0");
     }
 
     [Fact]
@@ -226,10 +226,10 @@ public class AstraConfigurationTests
         var renderer = new HtmlResourceRenderer(resourceStorage.Object, config);
 
         // Act
-        var url = renderer.GetResourceUrl("test.js");
+        var html = renderer.RenderHeaders().ToString();
 
         // Assert
-        url.Should().Be("/astra/test.js");
-        url.Should().NotContain("?v=");
+        html.Should().Contain("/astra/test.js");
+        html.Should().NotContain("?v=");
     }
 }

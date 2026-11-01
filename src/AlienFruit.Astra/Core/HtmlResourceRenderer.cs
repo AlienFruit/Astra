@@ -10,7 +10,7 @@ namespace AlienFruit.Astra.Core
     /// <summary>
     /// Atomic resource registry: one name maps to exactly one fully-formed
     /// <see cref="ResourceEntry"/> published with a single <c>TryAdd</c>. A resource is
-    /// either fully registered (name + kind + location + content source) or absent —
+    /// either fully registered (name + path + kind + version) or absent —
     /// a "half-registered" state is not expressible by construction.
     /// </summary>
     internal class HtmlResourceRenderer(
@@ -25,6 +25,7 @@ namespace AlienFruit.Astra.Core
             { ".js", AstraResourceKind.Script },
         };
 
+        /// <inheritdoc />
         public void AddResource(string name, string path, Assembly? assembly = null)
         {
             if (this.entries.TryGetValue(name, out var existing))
@@ -45,6 +46,7 @@ namespace AlienFruit.Astra.Core
             this.entries.TryAdd(name, entry);
         }
 
+        /// <inheritdoc />
         public IHtmlContent RenderHeaders()
         {
             var builder = new HtmlContentBuilder();

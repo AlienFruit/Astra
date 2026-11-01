@@ -38,6 +38,9 @@ namespace AlienFruit.Astra.ViewBoxLinkGroup
         /// </summary>
         public required string[] UriToActivete { get; set; }
 
+        /// <summary>
+        /// Gets the path to the init script template for this specification.
+        /// </summary>
         public string InitScriptTemplatePath => initScriptTemplatePath;
     }
 }

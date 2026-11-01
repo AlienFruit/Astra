@@ -15,6 +15,7 @@ namespace AlienFruit.Astra.Core
         private readonly ConcurrentDictionary<string, string> _resourceCache = new();
         private readonly ConcurrentDictionary<string, Template> _templateCache = new();
 
+        /// <inheritdoc />
         public string Render<T>(T specification) where T : ISpecification
         {
             var template = GetTemplate(specification.InitScriptTemplatePath);
@@ -23,6 +24,7 @@ namespace AlienFruit.Astra.Core
             return result;
         }
 
+        /// <inheritdoc />
         public string GetResource(string path)
         {
             return _resourceCache.GetOrAdd(path, static p =>

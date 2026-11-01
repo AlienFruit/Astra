@@ -16,6 +16,13 @@ namespace AlienFruit.Astra.Abstractions
         /// <returns>Raw JavaScript content ready for inline rendering.</returns>
         string Render<T>(T specification) where T : ISpecification;
 
+        /// <summary>
+        /// Reads an embedded resource from the Astra assembly and caches its content by path.
+        /// Used for scripts that must be inlined into the page rather than served by URL.
+        /// </summary>
+        /// <param name="path">Full manifest resource name (e.g. "AlienFruit.Astra.Core.Resources.load-check.js").</param>
+        /// <returns>The raw resource content.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when no resource exists with the given path.</exception>
         string GetResource(string path);
     }
 }

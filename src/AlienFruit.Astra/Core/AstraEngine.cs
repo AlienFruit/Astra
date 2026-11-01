@@ -23,6 +23,7 @@ namespace AlienFruit.Astra.Core
         /// Initializes a new instance of the <see cref="AstraEngine"/> class.
         /// </summary>
         /// <param name="htmlResourceRenderer">The HTML resource renderer used for managing scripts, stylesheets, and other resources.</param>
+        /// <param name="initScriptRenderer">The init script renderer used to inline the load-check script into responses.</param>
         public AstraEngine(IHtmlResourceRenderer htmlResourceRenderer, IInitScriptRenderer initScriptRenderer)
         {
             this.htmlResourceRenderer = htmlResourceRenderer;
@@ -56,7 +57,6 @@ namespace AlienFruit.Astra.Core
                 .AppendHtmlLine(scriptContent)
                 .AppendHtmlLine("</script>");
         }
-        //this.initScriptRenderer.GetResource(IncompleteLoadCheckScriptPath);//htmlResourceRenderer.RenderBodyResource("load-check.js");
 
         /// <summary>
         /// Determines the appropriate layout based on the request type.

@@ -4,8 +4,18 @@ using System.Text;
 
 namespace AlienFruit.Astra.Core.ResourceCompressors
 {
+    /// <summary>
+    /// <see cref="IResourceCompressor"/> implementation that minifies JS, CSS and HTML
+    /// content with NUglify. Resources whose names do not end in a known extension
+    /// are returned unchanged.
+    /// </summary>
     public class NuglifyResourceCompressor : IResourceCompressor
     {
+        /// <summary>
+        /// Minifies the resource content and returns it as a UTF-8 stream.
+        /// </summary>
+        /// <param name="resource">The resource to compress.</param>
+        /// <returns>A stream with the minified content; the caller owns and disposes it.</returns>
         public Stream CompressToStream(Abstractions.Resource resource)
         {
             var mimeType = GetFileMimType(resource.Name);
@@ -19,6 +29,11 @@ namespace AlienFruit.Astra.Core.ResourceCompressors
             return resultStream;
         }
 
+        /// <summary>
+        /// Minifies the resource content and returns it as a string.
+        /// </summary>
+        /// <param name="resource">The resource to compress.</param>
+        /// <returns>The minified content, or the original text for unknown extensions.</returns>
         public string CompressToString(Abstractions.Resource resource)
         {
             var mimeType = GetFileMimType(resource.Name);

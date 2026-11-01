@@ -4,6 +4,10 @@ using Microsoft.AspNetCore.Razor.TagHelpers;
 
 namespace AlienFruit.Astra.ViewBoxLinkGroup
 {
+    /// <summary>
+    /// Tag helper for grouping navigation links so a shared container element can take
+    /// on an "active" CSS class when the current request matches any of the monitored URIs.
+    /// </summary>
     [HtmlTargetElement("view-box-link-group")]
     public class ViewBoxLinkGroup(IInitScriptRenderer initScriptRenderer, IHttpContextAccessor httpContextAccessor) : TagHelper
     {

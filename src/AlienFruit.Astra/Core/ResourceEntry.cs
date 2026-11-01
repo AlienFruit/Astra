@@ -15,17 +15,6 @@ namespace AlienFruit.Astra.Core
     }
 
     /// <summary>
-    /// Closed content-origin hierarchy of a registered resource — one entry is built
-    /// with its source fully resolved, so a "name published, content missing" state
-    /// cannot be expressed by the type.
-    /// </summary>
-    //internal abstract record ResourceSource;
-
-    //internal sealed record EmbeddedSource(string Path, Assembly Assembly) : ResourceSource;
-
-    //internal sealed record CodeSource(string Content) : ResourceSource;
-
-    /// <summary>
     /// A single fully-formed registry entry: name + kind + location + source + version.
     /// Immutable; published into the registry with one atomic TryAdd.
     /// </summary>

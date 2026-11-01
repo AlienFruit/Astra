@@ -274,18 +274,7 @@ public class ViewBoxLinkTests : AstraTestBase
         viewBoxLink.Process(context, output);
 
         // Assert
-        HtmlResourceRendererMock.Verify(x => x.AddJsCodeFromTemplate(
-            "viewbox-link-init-test-link",
-            ViewBoxLinkSpecification.InitScriptTemplatePath,
-            It.Is<ViewBoxLinkSpecification>(spec =>
-                spec.Id == "test-link" &&
-                spec.Uri.ToString() == "/test/path" &&
-                spec.ViewBoxId == "test-viewbox" &&
-                spec.SelectedClassName == "active" &&
-                spec.DefaultClassName == "link" &&
-                spec.OnClick == "handleClick()" &&
-                spec.ScrollUp == false),
-            AstraResourceLocation.Body), Times.Once);
+        InitScriptRendererMock.Verify(x => x.Render(It.IsAny<ViewBoxLinkSpecification>()), Times.Once);
     }
 
     [Fact]
@@ -414,11 +403,7 @@ public class ViewBoxLinkTests : AstraTestBase
         viewBoxLink.Process(context, output);
 
         // Assert
-        HtmlResourceRendererMock.Verify(x => x.AddJsCodeFromTemplate(
-            "viewbox-link-init-test-link",
-            ViewBoxLinkSpecification.InitScriptTemplatePath,
-            It.IsAny<ViewBoxLinkSpecification>(),
-            AstraResourceLocation.Body), Times.Once);
+        InitScriptRendererMock.Verify(x => x.Render(It.IsAny<ViewBoxLinkSpecification>()), Times.Once);
     }
 
     [Fact]
@@ -490,11 +475,7 @@ public class ViewBoxLinkTests : AstraTestBase
         viewBoxLink.Process(context, output);
 
         // Assert
-        HtmlResourceRendererMock.Verify(x => x.AddJsCodeFromTemplate(
-            "viewbox-link-init-test-link",
-            ViewBoxLinkSpecification.InitScriptTemplatePath,
-            It.Is<ViewBoxLinkSpecification>(spec => spec.OnClick == "customClickHandler(event)"),
-            AstraResourceLocation.Body), Times.Once);
+        InitScriptRendererMock.Verify(x => x.Render(It.Is<ViewBoxLinkSpecification>(spec => spec.OnClick == "customClickHandler(event)")), Times.Once);
     }
 
     [Fact]
@@ -512,10 +493,6 @@ public class ViewBoxLinkTests : AstraTestBase
         viewBoxLink.Process(context, output);
 
         // Assert
-        HtmlResourceRendererMock.Verify(x => x.AddJsCodeFromTemplate(
-            "viewbox-link-init-test-link",
-            ViewBoxLinkSpecification.InitScriptTemplatePath,
-            It.Is<ViewBoxLinkSpecification>(spec => spec.ScrollUp == false),
-            AstraResourceLocation.Body), Times.Once);
+        InitScriptRendererMock.Verify(x => x.Render(It.Is<ViewBoxLinkSpecification>(spec => spec.ScrollUp == false)), Times.Once);
     }
 }

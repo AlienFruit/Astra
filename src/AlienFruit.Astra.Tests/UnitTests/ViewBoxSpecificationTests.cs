@@ -31,10 +31,11 @@ public class ViewBoxSpecificationTests
     {
         // Arrange
         var assembly = typeof(ViewBoxSpecification).Assembly;
+        var spec = new ViewBoxSpecification { Id = "test", ConnectionErrorMessage = "err" };
 
         // Act & Assert
         assembly.GetManifestResourceNames().Should().Contain(ViewBoxSpecification.JsResourcePath);
-        assembly.GetManifestResourceNames().Should().Contain(ViewBoxSpecification.InitScriptTemplatePath);
+        assembly.GetManifestResourceNames().Should().Contain(spec.InitScriptTemplatePath);
     }
 
     [Fact]
@@ -42,7 +43,8 @@ public class ViewBoxSpecificationTests
     {
         // Arrange
         var assembly = typeof(ViewBoxSpecification).Assembly;
-        using var stream = assembly.GetManifestResourceStream(ViewBoxSpecification.InitScriptTemplatePath);
+        var spec = new ViewBoxSpecification { Id = "test", ConnectionErrorMessage = "err" };
+        using var stream = assembly.GetManifestResourceStream(spec.InitScriptTemplatePath);
         using var reader = new StreamReader(stream!);
         var templateContent = reader.ReadToEnd();
 

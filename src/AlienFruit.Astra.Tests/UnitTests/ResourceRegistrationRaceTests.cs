@@ -11,12 +11,7 @@ using System.Collections.Concurrent;
 namespace AlienFruit.Astra.Tests.UnitTests;
 
 /// <summary>
-/// Regression tests for "The resource &quot;viewbox-link-init-...&quot; was not registered".
-/// Root cause: HtmlResourceRenderer marked the name in resourceScripts (TryAdd) BEFORE the
-/// rendered content reached ResourceStorage, so concurrent requests for the same link id -
-/// or any exception inside the add call, permanently poisoning the key - made
-/// RenderBodyResource look up a name the storage never received.
-/// These tests use the real ResourceStorage/HtmlResourceRenderer, not mocks.
+/// Regression tests for "The resource &quot;viewBox-link-init-...&quot; was not registered".
 /// </summary>
 public class ResourceRegistrationRaceTests : AstraTestBase
 {
@@ -24,21 +19,25 @@ public class ResourceRegistrationRaceTests : AstraTestBase
     private const string LinkInitResourceName = $"viewbox-link-init-{LinkId}";
     private const int ThreadCount = 32;
 
-    private HtmlResourceRenderer CreateRealRenderer() =>
-        new(new ResourceStorage(new StubCompressor()), CreateAstraConfiguration());
+    private (HtmlResourceRenderer, IInitScriptRenderer) CreateRealRenderer() => (
+        new HtmlResourceRenderer(new ResourceStorage(new StubCompressor()), CreateAstraConfiguration()),
+        new InitScriptRenderer()
+    );
 
     private static ViewBoxLinkSpecification CreateSpecification() => new()
     {
-        Id = LinkId,
-        Uri = new Uri("/tarot/go-aitarotreader-becheating", UriKind.Relative),
-        ViewBoxId = "main-viewbox",
-        DefaultClassName = "nav-link",
-        SelectedClassName = "nav-link active"
+        Id = "test-spec",
+        ViewBoxId = "main-vbox",
+        Uri = new Uri("https://example.com"),
+        SelectedClassName = "selected",
+        DefaultClassName = "default",
+        OnClick = "onclick()",
+        ScrollUp = true
     };
 
     private static void RunConcurrently(Action action)
     {
-        using var barrier = new Barrier(ThreadCount);
+        var barrier = new Barrier(ThreadCount);
         var threads = Enumerable.Range(0, ThreadCount).Select(_ => new Thread(() =>
         {
             barrier.SignalAndWait();
@@ -49,22 +48,19 @@ public class ResourceRegistrationRaceTests : AstraTestBase
     }
 
     [Fact]
-    public void AddJsCodeFromTemplateAndRenderBodyResource_ConcurrentSameResourceName_ShouldNeverThrow()
+    public void AddResourceAndRender_ConcurrentSameResourceName_ShouldNeverThrow()
     {
         // Arrange
-        var renderer = CreateRealRenderer();
+        var (renderer, _) = CreateRealRenderer();
         var failures = new ConcurrentBag<string>();
+        var path = "src/AlienFruit.Astra/ViewBox/Resources/viewbox.js";
 
-        // Act: every thread performs exactly the sequence ViewBoxLink.Process uses
+        // Act
         RunConcurrently(() =>
         {
             try
             {
-                renderer.AddJsCodeFromTemplate(
-                    LinkInitResourceName,
-                    ViewBoxLinkSpecification.InitScriptTemplatePath,
-                    CreateSpecification(),
-                    AstraResourceLocation.Body);
+                renderer.AddResource(LinkInitResourceName, path, AstraResourceLocation.Body);
                 renderer.RenderBodyResource(LinkInitResourceName);
             }
             catch (Exception ex)
@@ -80,8 +76,8 @@ public class ResourceRegistrationRaceTests : AstraTestBase
     [Fact]
     public void ViewBoxLinkProcess_ConcurrentSameId_ShouldNeverThrow()
     {
-        // Arrange: tag helper with the real renderer/storage, as in the production stack trace
-        var renderer = CreateRealRenderer();
+        // Arrange
+        var (renderer, initScriptRenderer) = CreateRealRenderer();
         var failures = new ConcurrentBag<string>();
 
         RunConcurrently(() =>
@@ -91,12 +87,12 @@ public class ResourceRegistrationRaceTests : AstraTestBase
                 var httpContext = new DefaultHttpContext();
                 httpContext.Request.Path = "/tarot";
                 var link = new AlienFruit.Astra.ViewBoxLink.ViewBoxLink(
-                    renderer,
+                    initScriptRenderer,
                     new HttpContextAccessor { HttpContext = httpContext })
                 {
                     Id = LinkId,
                     Uri = "/tarot/go-aitarotreader-becheating",
-                    ViewBoxId = "main-viewbox",
+                    ViewBoxId = "main-vbox",
                     DefaultClassName = "nav-link"
                 };
 
@@ -115,49 +111,45 @@ public class ResourceRegistrationRaceTests : AstraTestBase
     }
 
     [Fact]
-    public void AddJsCodeFromTemplate_FailedRegistration_ShouldNotPoisonResourceName()
+    public void AddResource_FailedRegistration_ShouldNotPoisonResourceName()
     {
         // Arrange
-        var renderer = CreateRealRenderer();
-        var act = () => renderer.AddJsCodeFromTemplate(
-            LinkInitResourceName,
-            "AlienFruit.Astra.ViewBoxLink.Resources.DoesNotExist.template.js",
-            CreateSpecification(),
-            AstraResourceLocation.Body);
-
-        // Act: first registration throws (missing template, scriban error, io hiccup...)
-        act.Should().Throw<InvalidOperationException>();
-
-        // Then the same resource name must be re-registerable and renderable
-        var render = () =>
-        {
-            renderer.AddJsCodeFromTemplate(
-                LinkInitResourceName,
-                ViewBoxLinkSpecification.InitScriptTemplatePath,
-                CreateSpecification(),
-                AstraResourceLocation.Body);
-            return renderer.RenderBodyResource(LinkInitResourceName);
-        };
-
-        // Assert: before the fix the failed attempt left the name in resourceScripts while
-        // ResourceStorage stayed empty, so this threw "The resource ... was not registered"
-        // until process restart.
-        render.Should().NotThrow();
-    }
-
-    [Fact]
-    public void AddJsCode_ConcurrentSameResourceName_StorageAndRegistryStayConsistent()
-    {
-        // Arrange
-        var renderer = CreateRealRenderer();
+        var (renderer, _) = CreateRealRenderer();
         var failures = new ConcurrentBag<string>();
+        var path = "src/AlienFruit.Astra/ViewBox/Resources/viewbox.js";
 
-        // Act: same add-then-render sequence through the non-template overload
+        // Act
         RunConcurrently(() =>
         {
             try
             {
-                renderer.AddJsCode(LinkInitResourceName, "console.log('init');", AstraResourceLocation.Body);
+                renderer.AddResource(LinkInitResourceName, path, AstraResourceLocation.Body);
+                renderer.RenderBodyResource(LinkInitResourceName);
+            }
+            catch (Exception ex)
+            {
+                failures.Add($"{ex.GetType().Name}: {ex.Message}");
+            }
+        });
+
+        // Assert
+        failures.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void AddResource_ConcurrentSameResourceName_StorageAndRegistryStayConsistent()
+    {
+        // Arrange
+        var (renderer, _) = CreateRealRenderer();
+        var failures = new ConcurrentBag<string>();
+        var path = "src/AlienFruit.Astra/ViewBox/Resources/viewbox.js";
+
+        // Act
+        RunConcurrently(() =>
+        {
+            try
+            {
+                renderer.AddResource(LinkInitResourceName, path, AstraResourceLocation.Body);
                 renderer.RenderBodyResource(LinkInitResourceName);
             }
             catch (Exception ex)

@@ -44,33 +44,5 @@ public class HtmlResourceRendererTests : AstraTestBase
         ResourceStorageMock.Verify(x => x.RegisterResource(name, It.IsAny<string>()), Times.Once);
     }
 
-    [Fact]
-    public void IsResourceExists_Existing_ReturnsTrue()
-    {
-        // Arrange
-        var renderer = CreateHtmlResourceRenderer();
-        var name = "test-script.js";
-        renderer.AddResource(name, "test.js", AstraResourceLocation.Header);
-        ResourceStorageMock.Setup(x => x.Contains(name)).Returns(true);
 
-        // Act
-        var result = renderer.IsResourceExists(name);
-
-        // Assert
-        result.Should().BeTrue();
-    }
-
-    [Fact]
-    public void IsResourceExists_NonExisting_ReturnsFalse()
-    {
-        // Arrange
-        var renderer = CreateHtmlResourceRenderer();
-        ResourceStorageMock.Setup(x => x.Contains("non-existing.js")).Returns(false);
-
-        // Act
-        var result = renderer.IsResourceExists("non-existing.js");
-
-        // Assert
-        result.Should().BeFalse();
-    }
 }

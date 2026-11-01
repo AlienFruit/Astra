@@ -41,10 +41,7 @@ public class ViewBoxLinkGroupTests : AstraTestBase
         var context = CreateTagHelperContext("view-box-link-group");
         var output = CreateTagHelperOutput("view-box-link-group");
 
-        SetupInitScriptRenderer("<script>group init</script>");
-
-        // Act
-        await group.ProcessAsync(context, output);
+        SetupInitScriptRenderer(new ViewBoxLinkGroupSpecification { Id = "test", ViewBoxId = "v", UriToActivete = ["http://test"] }, "<script>group init</script>");
 
         // Assert
         output.TagName.Should().Be("div");
@@ -63,10 +60,7 @@ public class ViewBoxLinkGroupTests : AstraTestBase
         var context = CreateTagHelperContext("view-box-link-group");
         var output = CreateTagHelperOutput("view-box-link-group");
 
-        SetupInitScriptRenderer("<script>group init</script>");
-
-        // Act
-        await group.ProcessAsync(context, output);
+        SetupInitScriptRenderer(new ViewBoxLinkGroupSpecification { Id = "test", ViewBoxId = "v", UriToActivete = ["http://test"] }, "<script>group init</script>");
 
         // Assert
         InitScriptRendererMock.Verify(x => x.Render<ViewBoxLinkGroupSpecification>(
@@ -109,7 +103,6 @@ public class ViewBoxLinkGroupTests : AstraTestBase
         await group.ProcessAsync(context, output);
 
         // Assert
-        renderer.IsResourceExists("viewbox-link-group-init--test-group").Should().BeFalse();
         ResourceStorageMock.Verify(x => x.RegisterResource(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 

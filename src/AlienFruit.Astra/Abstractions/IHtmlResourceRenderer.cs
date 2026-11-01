@@ -12,14 +12,14 @@ namespace AlienFruit.Astra.Abstractions
         /// <param name="path"></param>
         /// <param name="resourceLocation"></param>
         /// <param name="assembly"></param>
-        void AddResource(string name, string path, AstraResourceLocation resourceLocation, Assembly? assembly = null);
+        void AddResource(string name, string path, Assembly? assembly = null);
 
-        void AddJsCodeFromTemplate<T>(
-            string resourceName,
-            string templatePath,
-            T specification,
-            AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null)
-            where T : class;
+        // void AddJsCodeFromTemplate<T>(
+        //     string resourceName,
+        //     string templatePath,
+        //     T specification,
+        //     AstraResourceLocation resourceLocation = AstraResourceLocation.Header, Assembly? assembly = null)
+        //     where T : class;
 
         IHtmlContent RenderHeaders();
 
@@ -32,6 +32,6 @@ namespace AlienFruit.Astra.Abstractions
         /// </summary>
         /// <param name="name">Registered resource name</param>
         /// <exception cref="ArgumentException">Thrown when the name is not registered as a Body resource.</exception>
-        IHtmlContent RenderBodyResource(string name);
+        //IHtmlContent RenderBodyResource(string name);
     }
 }

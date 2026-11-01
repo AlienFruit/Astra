@@ -16,17 +16,18 @@ namespace AlienFruit.Astra.Core
     public class AstraEngine
     {
         private readonly IHtmlResourceRenderer htmlResourceRenderer;
+        private readonly IInitScriptRenderer initScriptRenderer;
         private const string IncompleteLoadCheckScriptPath = "AlienFruit.Astra.Core.Resources.load-check.js";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AstraEngine"/> class.
         /// </summary>
         /// <param name="htmlResourceRenderer">The HTML resource renderer used for managing scripts, stylesheets, and other resources.</param>
-        public AstraEngine(IHtmlResourceRenderer htmlResourceRenderer)
+        public AstraEngine(IHtmlResourceRenderer htmlResourceRenderer, IInitScriptRenderer initScriptRenderer)
         {
             this.htmlResourceRenderer = htmlResourceRenderer;
-            this.htmlResourceRenderer.AddResource("load-check.js", IncompleteLoadCheckScriptPath, AstraResourceLocation.Body);
-            this.htmlResourceRenderer.AddResource("viewbox.js", ViewBoxSpecification.JsResourcePath, AstraResourceLocation.Header);
+            this.initScriptRenderer = initScriptRenderer;
+            this.htmlResourceRenderer.AddResource("viewbox.js", ViewBoxSpecification.JsResourcePath);
         }
 
         /// <summary>
@@ -47,7 +48,15 @@ namespace AlienFruit.Astra.Core
         /// This should be called in the Razor view to ensure proper resource loading validation.
         /// </summary>
         /// <returns>An <see cref="IHtmlContent"/> containing the load check script.</returns>
-        public IHtmlContent IncompleteLoadCheck() => htmlResourceRenderer.RenderBodyResource("load-check.js");
+        public IHtmlContent IncompleteLoadCheck()
+        {
+            var scriptContent = this.initScriptRenderer.GetResource(IncompleteLoadCheckScriptPath);
+            return new HtmlContentBuilder()
+                .AppendHtmlLine("<script>")
+                .AppendHtmlLine(scriptContent)
+                .AppendHtmlLine("</script>");
+        }
+        //this.initScriptRenderer.GetResource(IncompleteLoadCheckScriptPath);//htmlResourceRenderer.RenderBodyResource("load-check.js");
 
         /// <summary>
         /// Determines the appropriate layout based on the request type.

@@ -39,7 +39,7 @@ namespace AlienFruit.Astra.Core
     /// their version is never served.</param>
     internal sealed record ResourceEntry(
         string Name,
+        string Path,
         AstraResourceKind Kind,
-        AstraResourceLocation Location,
         string Version);
 }

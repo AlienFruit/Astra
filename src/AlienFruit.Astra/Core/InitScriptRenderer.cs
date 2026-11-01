@@ -1,7 +1,4 @@
 using AlienFruit.Astra.Abstractions;
-using AlienFruit.Astra.ViewBox;
-using AlienFruit.Astra.ViewBoxLink;
-using AlienFruit.Astra.ViewBoxLinkGroup;
 using Scriban;
 using System.Collections.Concurrent;
 using System.Reflection;
@@ -15,19 +12,30 @@ namespace AlienFruit.Astra.Core
     /// </summary>
     internal sealed class InitScriptRenderer : IInitScriptRenderer
     {
+        private readonly ConcurrentDictionary<string, string> _resourceCache = new();
         private readonly ConcurrentDictionary<string, Template> _templateCache = new();
 
         public string Render<T>(T specification) where T : ISpecification
         {
-            var templatePath = specification.InitScriptTemplatePath;
-            var template = GetOrParseTemplate(templatePath);
+            var template = GetTemplate(specification.InitScriptTemplatePath);
             var result = template.Render(specification, x => x.Name)
                 ?? throw new InvalidOperationException("Result script cannot be null");
             return result;
         }
 
+        public string GetResource(string path)
+        {
+            return _resourceCache.GetOrAdd(path, static p =>
+            {
+                var assembly = Assembly.GetExecutingAssembly();
+                using var stream = assembly.GetManifestResourceStream(p)
+                    ?? throw new InvalidOperationException($"Resource not found: {p}");
+                using var reader = new StreamReader(stream);
+                return reader.ReadToEnd();
+            });
+        }
 
-        private Template GetOrParseTemplate(string path)
+        private Template GetTemplate(string path)
         {
             return _templateCache.GetOrAdd(path, static p =>
             {

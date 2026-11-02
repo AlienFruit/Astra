@@ -1,8 +1,6 @@
-using AlienFruit.Astra.Abstractions;
-using AlienFruit.Astra.Configuration;
+using System.Text;
+using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
-using Microsoft.AspNetCore.Razor.TagHelpers;
-using Moq;
 using System.Reflection;
 
 namespace AlienFruit.Astra.Tests.Infrastructure;
@@ -27,12 +25,11 @@ public abstract class AstraTestBase
     }
 
     /// <summary>
-    /// Настраивает InitScriptRendererMock для возврата указанного скрипта
+    /// Настраивает InitScriptRendererMock для возврата контента по пути
     /// </summary>
-    protected void SetupInitScriptRenderer<T>(T specification, string scriptContent) where T : class, ISpecification
+    protected void SetupInitScriptRendererGetResource(string path, string content)
     {
-        InitScriptRendererMock.Setup(x => x.Render(specification))
-            .Returns(scriptContent);
+        InitScriptRendererMock.Setup(x => x.GetResource(path)).Returns(content);
     }
 
     /// <summary>
@@ -40,11 +37,7 @@ public abstract class AstraTestBase
     /// </summary>
     protected TagHelperContext CreateTagHelperContext(string tagName = "test")
     {
-        var attributes = new TagHelperAttributeList();
-        var items = new Dictionary<object, object>();
-        var uniqueId = Guid.NewGuid().ToString();
-
-        return new TagHelperContext(tagName, attributes, items, uniqueId);
+        return new TagHelperContext(tagName, new TagHelperAttributeList(), new Dictionary<object, object>(), Guid.NewGuid().ToString());
     }
 
     /// <summary>
@@ -63,15 +56,6 @@ public abstract class AstraTestBase
     {
         var htmlString = new HtmlString(htmlContent);
         HtmlResourceRendererMock.Setup(x => x.RenderHeaders()).Returns(htmlString);
-    }
-
-    /// <summary>
-    /// Настраивает HtmlResourceRendererMock для возврата body ресурса
-    /// </summary>
-    protected void SetupHtmlResourceRendererRenderBodyResource(string resourceName, string htmlContent)
-    {
-        var htmlString = new HtmlString(htmlContent);
-        HtmlResourceRendererMock.Setup(x => x.RenderBodyResource(resourceName)).Returns(htmlString);
     }
 
     /// <summary>
@@ -95,7 +79,7 @@ public abstract class AstraTestBase
     /// </summary>
     protected Stream CreateMemoryStream(string content)
     {
-        var bytes = System.Text.Encoding.UTF8.GetBytes(content);
+        var bytes = Encoding.UTF8.GetBytes(content);
         return new MemoryStream(bytes);
     }
 
@@ -130,4 +114,19 @@ public abstract class AstraTestBase
             ResourceVersion = resourceVersion
         };
     }
+
+    protected string GetContent(IHtmlContent content)
+    {
+        TextWriter writer = new StringWriter();
+        content.WriteTo(writer, HtmlEncoder.Default);
+        return writer.ToString() ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Creates a real renderer and init script renderer for integration-style tests.
+    /// </summary>
+    protected (IHtmlResourceRenderer, IInitScriptRenderer) CreateRealRenderer() => (
+        new HtmlResourceRenderer(new ResourceStorage(ResourceCompressorMock.Object), CreateAstraConfiguration()),
+        new InitScriptRenderer()
+    );
 }

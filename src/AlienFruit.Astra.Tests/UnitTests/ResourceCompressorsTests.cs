@@ -1,7 +1,4 @@
-using AlienFruit.Astra.Abstractions;
 using AlienFruit.Astra.Core.ResourceCompressors;
-using AlienFruit.Astra.Models;
-using FluentAssertions;
 using System.Text;
 
 namespace AlienFruit.Astra.Tests.UnitTests;
@@ -96,7 +93,6 @@ public class ResourceCompressorsTests
         var result = compressor.CompressToString(resource);
 
         // Assert
-        result.Should().NotBeNull();
         result.Should().NotBeEmpty();
         // HTML compression should remove extra whitespace
         result.Should().NotContain("  ");

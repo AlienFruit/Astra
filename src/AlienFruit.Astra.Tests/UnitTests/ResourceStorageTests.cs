@@ -1,25 +1,10 @@
-using AlienFruit.Astra.Core;
-using AlienFruit.Astra.Models;
 using AlienFruit.Astra.Tests.Infrastructure;
-using FluentAssertions;
-using Moq;
-using System.Reflection;
 
 namespace AlienFruit.Astra.Tests.UnitTests;
 
 public class ResourceStorageTests : AstraTestBase
 {
     private ResourceStorage CreateResourceStorage() => new(ResourceCompressorMock.Object);
-
-    [Fact]
-    public void Constructor_ShouldInitializeWithResourceCompressor()
-    {
-        // Act
-        var storage = CreateResourceStorage();
-
-        // Assert
-        storage.Should().NotBeNull();
-    }
 
     [Fact]
     public void RegisterResource_Embedded_ShouldAddEmbeddedResource()

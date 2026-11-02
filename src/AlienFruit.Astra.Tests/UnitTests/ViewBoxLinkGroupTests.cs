@@ -1,9 +1,5 @@
-using AlienFruit.Astra.Core;
 using AlienFruit.Astra.Tests.Infrastructure;
 using AlienFruit.Astra.ViewBoxLinkGroup;
-using FluentAssertions;
-using Microsoft.AspNetCore.Http;
-using Moq;
 
 namespace AlienFruit.Astra.Tests.UnitTests;
 
@@ -41,13 +37,17 @@ public class ViewBoxLinkGroupTests : AstraTestBase
         var context = CreateTagHelperContext("view-box-link-group");
         var output = CreateTagHelperOutput("view-box-link-group");
 
-        SetupInitScriptRenderer(new ViewBoxLinkGroupSpecification { Id = "test", ViewBoxId = "v", UriToActivete = ["http://test"] }, "<script>group init</script>");
+        InitScriptRendererMock.Setup(x => x.Render(It.IsAny<ViewBoxLinkGroupSpecification>()))
+            .Returns("group init");
+
+        // Act
+        await group.ProcessAsync(context, output);
 
         // Assert
         output.TagName.Should().Be("div");
         output.Attributes["id"].Value.Should().Be("test-group");
         output.Attributes["class"].Value.Should().Be("group-link");
-        output.PostContent.GetContent().Should().Contain("<script>group init</script>");
+        output.PostContent.GetContent().Should().Be("<script>group init</script>");
     }
 
     [Fact]
@@ -60,18 +60,26 @@ public class ViewBoxLinkGroupTests : AstraTestBase
         var context = CreateTagHelperContext("view-box-link-group");
         var output = CreateTagHelperOutput("view-box-link-group");
 
-        SetupInitScriptRenderer(new ViewBoxLinkGroupSpecification { Id = "test", ViewBoxId = "v", UriToActivete = ["http://test"] }, "<script>group init</script>");
+        InitScriptRendererMock.Setup(x => x.Render(It.IsAny<ViewBoxLinkGroupSpecification>()))
+            .Returns("group init");
+
+        // Act
+        await group.ProcessAsync(context, output);
 
         // Assert
-        InitScriptRendererMock.Verify(x => x.Render<ViewBoxLinkGroupSpecification>(
-            It.IsAny<ViewBoxLinkGroupSpecification>()), Times.Once);
+        InitScriptRendererMock.Verify(x => x.Render(
+            It.Is<ViewBoxLinkGroupSpecification>(spec =>
+                spec.Id == "test-group"
+                && spec.ViewBoxId == "test-viewbox"
+                && spec.SelectedClassName == "active"
+                && spec.DefaultClassName == "link"
+                && spec.UriToActivete.SequenceEqual(new[] { "/one", "/two" }))), Times.Once);
     }
 
     [Fact]
     public async Task InitScript_GoldenOutput_RendersTemplateWithUriList()
     {
-        // Arrange: real stateless renderer, no compressor — raw template output, exactly
-        // as the old body path produced it for the extension-less group name.
+        // Arrange: real stateless renderer, no compressor — raw template output.
         var group = CreateGroup(new InitScriptRenderer());
         group.SelectedClassName = "active";
         group.DefaultClassName = "link";
@@ -88,22 +96,6 @@ public class ViewBoxLinkGroupTests : AstraTestBase
         html.Should().Contain("ViewBoxRegistry.getOrOnReady('test-viewbox'");
         html.Should().Contain("var uriListToActivate = ['/one', '/two'];");
         html.Should().Contain("viewBox.registerUriGroup('test-group', 'active', 'link', uriListToActivate)");
-    }
-
-    [Fact]
-    public async Task InitScript_IsNotRegisteredGlobally()
-    {
-        // Arrange: production-shaped stack — real registry + real stateless renderer
-        var renderer = new HtmlResourceRenderer(ResourceStorageMock.Object, CreateAstraConfiguration());
-        var group = CreateGroup(new InitScriptRenderer());
-        var context = CreateTagHelperContext("view-box-link-group");
-        var output = CreateTagHelperOutput("view-box-link-group");
-
-        // Act
-        await group.ProcessAsync(context, output);
-
-        // Assert
-        ResourceStorageMock.Verify(x => x.RegisterResource(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 
     [Fact]

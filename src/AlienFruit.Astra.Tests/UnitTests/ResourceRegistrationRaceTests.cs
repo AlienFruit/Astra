@@ -1,11 +1,4 @@
-using AlienFruit.Astra.Abstractions;
-using AlienFruit.Astra.Core;
-using AlienFruit.Astra.Core.ResourceCompressors;
 using AlienFruit.Astra.Tests.Infrastructure;
-using AlienFruit.Astra.ViewBoxLink;
-using FluentAssertions;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Razor.TagHelpers;
 using System.Collections.Concurrent;
 
 namespace AlienFruit.Astra.Tests.UnitTests;
@@ -18,11 +11,6 @@ public class ResourceRegistrationRaceTests : AstraTestBase
     private const string LinkId = "go-aitarotreader-becheating";
     private const string LinkInitResourceName = $"viewbox-link-init-{LinkId}";
     private const int ThreadCount = 32;
-
-    private (HtmlResourceRenderer, IInitScriptRenderer) CreateRealRenderer() => (
-        new HtmlResourceRenderer(new ResourceStorage(new StubCompressor()), CreateAstraConfiguration()),
-        new InitScriptRenderer()
-    );
 
     private static ViewBoxLinkSpecification CreateSpecification() => new()
     {
@@ -60,8 +48,7 @@ public class ResourceRegistrationRaceTests : AstraTestBase
         {
             try
             {
-                renderer.AddResource(LinkInitResourceName, path, AstraResourceLocation.Body);
-                renderer.RenderBodyResource(LinkInitResourceName);
+                renderer.AddResource(LinkInitResourceName, path);
             }
             catch (Exception ex)
             {
@@ -74,7 +61,7 @@ public class ResourceRegistrationRaceTests : AstraTestBase
     }
 
     [Fact]
-    public void ViewBoxLinkProcess_ConcurrentSameId_ShouldNeverThrow()
+    public void ViewBoxLinkProcess_ConcurrentSameId_ShouldNeverEmbraceFailure()
     {
         // Arrange
         var (renderer, initScriptRenderer) = CreateRealRenderer();
@@ -91,7 +78,7 @@ public class ResourceRegistrationRaceTests : AstraTestBase
                     new HttpContextAccessor { HttpContext = httpContext })
                 {
                     Id = LinkId,
-                    Uri = "/tarot/go-aitarotreader-becheating",
+                    Uri = "/tarot/go-autarotreader-becheating",
                     ViewBoxId = "main-vbox",
                     DefaultClassName = "nav-link"
                 };
@@ -123,8 +110,7 @@ public class ResourceRegistrationRaceTests : AstraTestBase
         {
             try
             {
-                renderer.AddResource(LinkInitResourceName, path, AstraResourceLocation.Body);
-                renderer.RenderBodyResource(LinkInitResourceName);
+                renderer.AddResource(LinkInitResourceName, path);
             }
             catch (Exception ex)
             {
@@ -149,8 +135,7 @@ public class ResourceRegistrationRaceTests : AstraTestBase
         {
             try
             {
-                renderer.AddResource(LinkInitResourceName, path, AstraResourceLocation.Body);
-                renderer.RenderBodyResource(LinkInitResourceName);
+                renderer.AddResource(LinkInitResourceName, path);
             }
             catch (Exception ex)
             {

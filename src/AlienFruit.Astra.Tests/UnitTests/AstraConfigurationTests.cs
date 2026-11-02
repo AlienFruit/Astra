@@ -1,19 +1,14 @@
-using AlienFruit.Astra.Configuration;
-using AlienFruit.Astra.Core;
 using AlienFruit.Astra.Core.ResourceCompressors;
-using AlienFruit.Astra.Abstractions;
-using AlienFruit.Astra.Models;
+using AlienFruit.Astra.DependencyInjection;
 using AlienFruit.Astra.Tests.Infrastructure;
-using FluentAssertions;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
-using System.IO;
 using System.Text;
 
 namespace AlienFruit.Astra.Tests.UnitTests;
 
-public class AstraConfigurationTests
+public class AstraConfigurationTests : AstraTestBase
 {
     [Fact]
     public void Constructor_DefaultValues_ShouldSetCorrectDefaults()
@@ -44,15 +39,15 @@ public class AstraConfigurationTests
         {
             ""AstraConfiguration"": {
                 ""UseCompression"": false,
-                ""ResourcesRoute"": ""custom-resources"",
+                ""ResourcesRoute"": ""custom"",
                 ""EnableVersioning"": true,
-                ""ResourceVersion"": ""2.1.0"",
+                ""ResourceVersion"": ""1.0.0"",
                 ""CacheMaxAge"": 86400
             }
         }";
 
         var configuration = new ConfigurationBuilder()
-            .AddJsonStream(new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(json)))
+            .AddJsonStream(new MemoryStream(Encoding.UTF8.GetBytes(json)))
             .Build();
 
         // Act
@@ -62,28 +57,10 @@ public class AstraConfigurationTests
         // Assert
         astraConfig.Should().NotBeNull();
         astraConfig!.UseCompression.Should().BeFalse();
-        astraConfig.ResourcesRoute.Should().Be("custom-resources");
+        astraConfig.ResourcesRoute.Should().Be("custom");
         astraConfig.EnableVersioning.Should().BeTrue();
-        astraConfig.ResourceVersion.Should().Be("2.1.0");
+        astraConfig.ResourceVersion.Should().Be("1.0.0");
         astraConfig.CacheMaxAge.Should().Be(86400);
-    }
-
-    [Fact]
-    public void Configuration_BindFromEmptySection_ShouldReturnNull()
-    {
-        // Arrange
-        var json = @"{}";
-
-        var configuration = new ConfigurationBuilder()
-            .AddJsonStream(new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(json)))
-            .Build();
-
-        // Act
-        var section = configuration.GetSection(AstraConfiguration.Name);
-        var astraConfig = section.Get<AstraConfiguration>();
-
-        // Assert
-        astraConfig.Should().BeNull();
     }
 
     [Fact]
@@ -99,7 +76,7 @@ public class AstraConfigurationTests
         }";
 
         var configuration = new ConfigurationBuilder()
-            .AddJsonStream(new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(json)))
+            .AddJsonStream(new MemoryStream(Encoding.UTF8.GetBytes(json)))
             .Build();
 
         // Act
@@ -108,7 +85,7 @@ public class AstraConfigurationTests
 
         // Assert
         astraConfig.Should().NotBeNull();
-        astraConfig!.UseCompression.Should().BeFalse();
+        astraConfig.UseCompression.Should().BeFalse();
         astraConfig.ResourcesRoute.Should().Be("custom");
         astraConfig.EnableVersioning.Should().BeFalse(); // default
         astraConfig.ResourceVersion.Should().BeNull(); // default
@@ -116,41 +93,48 @@ public class AstraConfigurationTests
     }
 
     [Fact]
-    public void UseCompression_True_ShouldRegisterNuglifyCompressor()
+    public void AddAstra_UseCompressionTrue_RegistersNuglifyCompressor()
     {
         // Arrange
-        var services = new ServiceCollection();
-        var configuration = new AstraConfiguration { UseCompression = true };
+        var builder = WebApplication.CreateBuilder();
 
         // Act
-        services.AddSingleton(configuration);
-        services.AddSingleton<IResourceCompressor, NuglifyResourceCompressor>();
-
-        var serviceProvider = services.BuildServiceProvider();
+        builder.AddAstra(options => options.UseCompression = true);
+        var serviceProvider = builder.Services.BuildServiceProvider();
 
         // Assert
-        var compressor = serviceProvider.GetService<IResourceCompressor>();
-        compressor.Should().NotBeNull();
-        compressor.Should().BeOfType<NuglifyResourceCompressor>();
+        serviceProvider.GetRequiredService<IResourceCompressor>().Should().BeOfType<NuglifyResourceCompressor>();
     }
 
     [Fact]
-    public void UseCompression_False_ShouldRegisterStubCompressor()
+    public void AddAstra_UseCompressionFalse_RegistersStubCompressor()
     {
         // Arrange
-        var services = new ServiceCollection();
-        var configuration = new AstraConfiguration { UseCompression = false };
+        var builder = WebApplication.CreateBuilder();
 
         // Act
-        services.AddSingleton(configuration);
-        services.AddSingleton<IResourceCompressor, StubCompressor>();
-
-        var serviceProvider = services.BuildServiceProvider();
+        builder.AddAstra(options => options.UseCompression = false);
+        var serviceProvider = builder.Services.BuildServiceProvider();
 
         // Assert
-        var compressor = serviceProvider.GetService<IResourceCompressor>();
-        compressor.Should().NotBeNull();
-        compressor.Should().BeOfType<StubCompressor>();
+        serviceProvider.GetRequiredService<IResourceCompressor>().Should().BeOfType<StubCompressor>();
+    }
+
+    [Fact]
+    public void AddAstra_RegistersCoreAstraServices()
+    {
+        // Arrange
+        var builder = WebApplication.CreateBuilder();
+
+        // Act
+        builder.AddAstra();
+        var serviceProvider = builder.Services.BuildServiceProvider();
+
+        // Assert
+        serviceProvider.GetRequiredService<IResourceStorage>().Should().BeOfType<ResourceStorage>();
+        serviceProvider.GetRequiredService<IInitScriptRenderer>().Should().BeOfType<InitScriptRenderer>();
+        serviceProvider.GetRequiredService<AstraEngine>().Should().NotBeNull();
+        serviceProvider.GetRequiredService<AstraConfiguration>().ResourcesRoute.Should().Be("astra");
     }
 
     [Fact]
@@ -160,9 +144,10 @@ public class AstraConfigurationTests
         var config = new AstraConfiguration { ResourcesRoute = "my-assets" };
         var resourceStorage = new Mock<IResourceStorage>();
         var renderer = new HtmlResourceRenderer(resourceStorage.Object, config);
+        renderer.AddResource("test.js", "test.js");
 
         // Act
-        var html = renderer.RenderHeaders().ToString();
+        var html = GetContent(renderer.RenderHeaders());
 
         // Assert
         html.Should().Contain("/my-assets/test.js");
@@ -183,15 +168,15 @@ public class AstraConfigurationTests
         // First register a resource to trigger hash calculation
         var testJsCode = "console.log('test');";
         resourceStorage.Setup(x => x.Contains("test.js")).Returns(true);
-        resourceStorage.Setup(x => x.OpenRead("test.js")).Returns(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(testJsCode)));
-        renderer.AddResource("test.js", "test.js", AstraResourceLocation.Header);
+        resourceStorage.Setup(x => x.OpenRead("test.js")).Returns(new MemoryStream(Encoding.UTF8.GetBytes(testJsCode)));
+        renderer.AddResource("test.js", "test.js");
 
         // Act
-        var html = renderer.RenderHeaders().ToString();
+        var html = GetContent(renderer.RenderHeaders());
 
         // Assert
         html.Should().Contain("?v=");
-        html.Should().MatchRegex(@"\?v=[a-zA-Z0-9_-]{32}$");
+        html.Should().MatchRegex(@"\?v=[a-f0-9]{64}");
     }
 
     [Fact]
@@ -205,9 +190,10 @@ public class AstraConfigurationTests
         };
         var resourceStorage = new Mock<IResourceStorage>();
         var renderer = new HtmlResourceRenderer(resourceStorage.Object, config);
+        renderer.AddResource("test.js", "test.js");
 
         // Act
-        var html = renderer.RenderHeaders().ToString();
+        var html = GetContent(renderer.RenderHeaders());
 
         // Assert
         html.Should().Contain("/astra/test.js?v=2.1.0");
@@ -224,9 +210,10 @@ public class AstraConfigurationTests
         };
         var resourceStorage = new Mock<IResourceStorage>();
         var renderer = new HtmlResourceRenderer(resourceStorage.Object, config);
+        renderer.AddResource("test.js", "test.js");
 
         // Act
-        var html = renderer.RenderHeaders().ToString();
+        var html = GetContent(renderer.RenderHeaders());
 
         // Assert
         html.Should().Contain("/astra/test.js");

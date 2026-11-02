@@ -1,5 +1,3 @@
-using AlienFruit.Astra.ViewBox;
-using FluentAssertions;
 
 namespace AlienFruit.Astra.Tests.UnitTests;
 

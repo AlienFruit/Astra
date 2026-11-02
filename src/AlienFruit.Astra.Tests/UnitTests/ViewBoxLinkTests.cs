@@ -1,60 +1,66 @@
-using AlienFruit.Astra.Abstractions;
-using AlienFruit.Astra.Core;
 using AlienFruit.Astra.Tests.Infrastructure;
-using AlienFruit.Astra.ViewBoxLink;
-using FluentAssertions;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Razor.TagHelpers;
-using Moq;
 
 namespace AlienFruit.Astra.Tests.UnitTests;
 
 public class ViewBoxLinkTests : AstraTestBase
 {
-    private AlienFruit.Astra.ViewBoxLink.ViewBoxLink CreateViewBoxLink(string id = "test-link", string uri = "/test", string viewBoxId = "test-viewbox")
+    private const string currentPath = "/current";
+
+    private void SetupViewBoxLinkScript(string scriptContent)
     {
-        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-        var httpContext = new DefaultHttpContext();
-        httpContext.Request.Path = "/current";
-        httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
-
-        // Use Activator to create ViewBoxLink without required property validation
-        var viewBoxLink = (AlienFruit.Astra.ViewBoxLink.ViewBoxLink)Activator.CreateInstance(
-            typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink),
-            HtmlResourceRendererMock.Object,
-            httpContextAccessorMock.Object)!;
-
-        typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink).GetProperty("Id")!.SetValue(viewBoxLink, id);
-        typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink).GetProperty("Uri")!.SetValue(viewBoxLink, uri);
-        typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink).GetProperty("ViewBoxId")!.SetValue(viewBoxLink, viewBoxId);
-
-        return viewBoxLink;
+        InitScriptRendererMock.Setup(x => x.Render(It.IsAny<ViewBoxLinkSpecification>()))
+            .Returns(scriptContent);
     }
 
-    [Fact]
-    public void Constructor_ShouldInitializeWithDependencies()
+    private static IHttpContextAccessor CreateHttpContextAccessor(string? requestPath)
     {
-        // Arrange & Act
-        var viewBoxLink = CreateViewBoxLink();
+        var mock = new Mock<IHttpContextAccessor>();
+        if (requestPath is null)
+        {
+            mock.Setup(x => x.HttpContext).Returns((HttpContext)null!);
+        }
+        else
+        {
+            var httpContext = new DefaultHttpContext();
+            httpContext.Request.Path = requestPath;
+            mock.Setup(x => x.HttpContext).Returns(httpContext);
+        }
 
-        // Assert
-        viewBoxLink.Should().NotBeNull();
+        return mock.Object;
     }
+
+    private AlienFruit.Astra.ViewBoxLink.ViewBoxLink CreateViewBoxLink(
+        string id = "test-link",
+        string uri = "/test",
+        string viewBoxId = "test-viewbox",
+        IHttpContextAccessor? httpContextAccessor = null,
+        IInitScriptRenderer? initScriptRenderer = null)
+    {
+        return new AlienFruit.Astra.ViewBoxLink.ViewBoxLink(
+            initScriptRenderer ?? InitScriptRendererMock.Object,
+            httpContextAccessor ?? CreateHttpContextAccessor(currentPath))
+        {
+            Id = id,
+            Uri = uri,
+            ViewBoxId = viewBoxId
+        };
+    }
+
+    private TagHelperContext Context() => CreateTagHelperContext("view-box-link");
+
+    private TagHelperOutput Output() => CreateTagHelperOutput("view-box-link");
 
     [Fact]
     public void Process_WhenIdIsNull_ShouldThrowArgumentException()
     {
-        // Arrange
         var viewBoxLink = CreateViewBoxLink();
-        // Id is required, so we need to use reflection to set it to null for testing
-        typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink).GetProperty("Id")!.SetValue(viewBoxLink, null);
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
+        viewBoxLink.Id = null!;
 
-        // Act
+        var context = Context();
+        var output = Output();
+
         var act = () => viewBoxLink.Process(context, output);
 
-        // Assert
         act.Should().Throw<ArgumentException>()
             .WithMessage("Id attribute is required");
     }
@@ -62,16 +68,14 @@ public class ViewBoxLinkTests : AstraTestBase
     [Fact]
     public void Process_WhenIdIsEmpty_ShouldThrowArgumentException()
     {
-        // Arrange
         var viewBoxLink = CreateViewBoxLink();
         viewBoxLink.Id = "";
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
 
-        // Act
+        var context = Context();
+        var output = Output();
+
         var act = () => viewBoxLink.Process(context, output);
 
-        // Assert
         act.Should().Throw<ArgumentException>()
             .WithMessage("Id attribute is required");
     }
@@ -79,16 +83,14 @@ public class ViewBoxLinkTests : AstraTestBase
     [Fact]
     public void Process_WhenIdIsWhitespace_ShouldThrowArgumentException()
     {
-        // Arrange
         var viewBoxLink = CreateViewBoxLink();
         viewBoxLink.Id = "   ";
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
 
-        // Act
+        var context = Context();
+        var output = Output();
+
         var act = () => viewBoxLink.Process(context, output);
 
-        // Assert
         act.Should().Throw<ArgumentException>()
             .WithMessage("Id attribute is required");
     }
@@ -96,16 +98,14 @@ public class ViewBoxLinkTests : AstraTestBase
     [Fact]
     public void Process_WhenUriIsNull_ShouldThrowArgumentException()
     {
-        // Arrange
         var viewBoxLink = CreateViewBoxLink();
-        typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink).GetProperty("Uri")!.SetValue(viewBoxLink, null);
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
+        viewBoxLink.Uri = null!;
 
-        // Act
+        var context = Context();
+        var output = Output();
+
         var act = () => viewBoxLink.Process(context, output);
 
-        // Assert
         act.Should().Throw<ArgumentException>()
             .WithMessage("Uri attribute is required");
     }
@@ -113,16 +113,14 @@ public class ViewBoxLinkTests : AstraTestBase
     [Fact]
     public void Process_WhenUriIsEmpty_ShouldThrowArgumentException()
     {
-        // Arrange
         var viewBoxLink = CreateViewBoxLink();
         viewBoxLink.Uri = "";
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
 
-        // Act
+        var context = Context();
+        var output = Output();
+
         var act = () => viewBoxLink.Process(context, output);
 
-        // Assert
         act.Should().Throw<ArgumentException>()
             .WithMessage("Uri attribute is required");
     }
@@ -130,369 +128,383 @@ public class ViewBoxLinkTests : AstraTestBase
     [Fact]
     public void Process_WhenUriIsWhitespace_ShouldThrowArgumentException()
     {
-        // Arrange
         var viewBoxLink = CreateViewBoxLink();
         viewBoxLink.Uri = "   ";
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
 
-        // Act
+        var context = Context();
+        var output = Output();
+
         var act = () => viewBoxLink.Process(context, output);
 
-        // Assert
         act.Should().Throw<ArgumentException>()
             .WithMessage("Uri attribute is required");
     }
 
     [Fact]
+    public void Process_WhenViewBoxIdIsWhitespace_ShouldThrowArgumentException()
+    {
+        var viewBoxLink = CreateViewBoxLink(viewBoxId: " ");
+
+        var context = Context();
+        var output = Output();
+
+        var act = () => viewBoxLink.Process(context, output);
+
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("ViewBoxId attribute is required");
+    }
+
+    [Fact]
     public void Process_WhenIdIsValid_ShouldSetIdAttribute()
     {
-        // Arrange
-        var viewBoxLink = CreateViewBoxLink();
-        viewBoxLink.Id = "test-link";
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
+        var viewBoxLink = CreateViewBoxLink(id: "my-link");
+        var context = Context();
+        var output = Output();
 
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-link-init-test-link", "<script>init</script>");
+        SetupViewBoxLinkScript("init");
 
-        // Act
         viewBoxLink.Process(context, output);
 
-        // Assert
-        output.Attributes["id"].Value.Should().Be("test-link");
+        output.Attributes["id"].Value.Should().Be("my-link");
     }
 
     [Fact]
     public void Process_WhenUriIsValid_ShouldSetHrefAttribute()
     {
-        // Arrange
-        var viewBoxLink = CreateViewBoxLink();
-        viewBoxLink.Uri = "/test/path";
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
+        var viewBoxLink = CreateViewBoxLink(uri: "/test/path");
+        var context = Context();
+        var output = Output();
 
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-link-init-test-link", "<script>init</script>");
+        SetupViewBoxLinkScript("init");
 
-        // Act
         viewBoxLink.Process(context, output);
 
-        // Assert
         output.Attributes["href"].Value.Should().Be("/test/path");
     }
 
     [Fact]
     public void Process_WhenStyleIsSet_ShouldSetStyleAttribute()
     {
-        // Arrange
         var viewBoxLink = CreateViewBoxLink();
         viewBoxLink.Style = "color: red; font-size: 14px;";
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
+        var context = Context();
+        var output = Output();
 
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-link-init-test-link", "<script>init</script>");
+        SetupViewBoxLinkScript("init");
 
-        // Act
         viewBoxLink.Process(context, output);
 
-        // Assert
         output.Attributes["style"].Value.Should().Be("color: red; font-size: 14px;");
     }
 
     [Fact]
     public void Process_WhenStyleIsNullOrEmpty_ShouldNotSetStyleAttribute()
     {
-        // Arrange
         var viewBoxLink = CreateViewBoxLink();
         viewBoxLink.Style = null;
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
+        var context = Context();
+        var output = Output();
 
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-link-init-test-link", "<script>init</script>");
+        SetupViewBoxLinkScript("init");
 
-        // Act
         viewBoxLink.Process(context, output);
 
-        // Assert
         output.Attributes.ContainsName("style").Should().BeFalse();
     }
 
     [Fact]
     public void Process_WhenTagNameIsSet_ShouldUseSpecifiedTagName()
     {
-        // Arrange
         var viewBoxLink = CreateViewBoxLink();
         viewBoxLink.TagName = "div";
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
+        var context = Context();
+        var output = Output();
 
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-link-init-test-link", "<script>init</script>");
+        SetupViewBoxLinkScript("init");
 
-        // Act
         viewBoxLink.Process(context, output);
 
-        // Assert
         output.TagName.Should().Be("div");
     }
 
     [Fact]
     public void Process_WhenTagNameIsNull_ShouldUseDefaultAnchorTag()
     {
-        // Arrange
         var viewBoxLink = CreateViewBoxLink();
         viewBoxLink.TagName = null;
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
+        var context = Context();
+        var output = Output();
 
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-link-init-test-link", "<script>init</script>");
+        SetupViewBoxLinkScript("init");
+
+        viewBoxLink.Process(context, output);
+
+        output.TagName.Should().Be("a");
+    }
+
+    [Fact]
+    public void Process_ShouldRenderInitScriptWrappedInScriptTag()
+    {
+        var viewBoxLink = CreateViewBoxLink();
+        var context = Context();
+        var output = Output();
+
+        SetupViewBoxLinkScript("group init();");
+
+        viewBoxLink.Process(context, output);
+
+        output.PostContent.GetContent().Should().Be("<script>group init();</script>");
+    }
+
+    [Fact]
+    public void InitScript_GoldenOutput_RendersTemplateFromSpecification()
+    {
+        // Arrange: real stateless renderer — raw template output, no mocks involved.
+        var viewBoxLink = CreateViewBoxLink(
+            id: "test-link",
+            uri: "/some/path",
+            viewBoxId: "test-viewbox",
+            initScriptRenderer: new InitScriptRenderer());
+        viewBoxLink.SelectedClassName = "active";
+        viewBoxLink.DefaultClassName = "link";
+
+        var context = Context();
+        var output = Output();
 
         // Act
         viewBoxLink.Process(context, output);
 
         // Assert
-        output.TagName.Should().Be("a");
+        var html = output.PostContent.GetContent();
+        html.Should().StartWith("<script>");
+        html.TrimEnd().Should().EndWith("</script>");
+        html.Should().Contain("ViewBoxRegistry.getOrOnReady('test-viewbox'");
+        html.Should().Contain("viewBox.registerUri('/some/path', 'test-link', 'active', 'link', true)");
+    }
+
+    [Fact]
+    public void InitScript_GoldenOutput_OmitsClickHandlerWhenOnClickIsNotSet()
+    {
+        var viewBoxLink = CreateViewBoxLink(initScriptRenderer: new InitScriptRenderer());
+
+        var context = Context();
+        var output = Output();
+
+        // Act
+        viewBoxLink.Process(context, output);
+
+        // Assert
+        output.PostContent.GetContent().Should().NotContain("addEventListener");
+    }
+
+    [Fact]
+    public void InitScript_GoldenOutput_RendersClickHandlerWhenOnClickIsSet()
+    {
+        var viewBoxLink = CreateViewBoxLink(id: "click-link", initScriptRenderer: new InitScriptRenderer());
+        viewBoxLink.OnClickJsFunction = "console.log('clicked')";
+
+        var context = Context();
+        var output = Output();
+
+        // Act
+        viewBoxLink.Process(context, output);
+
+        // Assert
+        var html = output.PostContent.GetContent();
+        html.Should().Contain("document.getElementById('click-link')");
+        html.Should().Contain("addEventListener('click'");
+        html.Should().Contain("console.log('clicked')");
     }
 
     [Fact]
     public void Process_ShouldCreateViewBoxLinkSpecification()
     {
-        // Arrange
-        var viewBoxLink = CreateViewBoxLink();
-        viewBoxLink.Id = "test-link";
-        viewBoxLink.Uri = "/test/path";
-        viewBoxLink.ViewBoxId = "test-viewbox";
+        var viewBoxLink = CreateViewBoxLink(id: "test-link", uri: "/test/path", viewBoxId: "test-viewbox");
         viewBoxLink.SelectedClassName = "active";
         viewBoxLink.DefaultClassName = "link";
         viewBoxLink.OnClickJsFunction = "handleClick()";
         viewBoxLink.ScrollUp = false;
 
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
+        var context = Context();
+        var output = Output();
 
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-link-init-test-link", "<script>init</script>");
+        SetupViewBoxLinkScript("init");
 
-        // Act
         viewBoxLink.Process(context, output);
 
-        // Assert
-        InitScriptRendererMock.Verify(x => x.Render(It.IsAny<ViewBoxLinkSpecification>()), Times.Once);
+        InitScriptRendererMock.Verify(x => x.Render(It.Is<ViewBoxLinkSpecification>(spec =>
+            spec.Id == "test-link"
+            && spec.ViewBoxId == "test-viewbox"
+            && spec.Uri.OriginalString == "/test/path"
+            && spec.SelectedClassName == "active"
+            && spec.DefaultClassName == "link"
+            && spec.OnClick == "handleClick()"
+            && spec.ScrollUp == false)), Times.Once);
     }
 
     [Fact]
     public void Process_WhenDefaultClassNameIsSet_ShouldSetClassAttribute()
     {
-        // Arrange
-        var viewBoxLink = CreateViewBoxLink();
+        var viewBoxLink = CreateViewBoxLink(uri: currentPath);
         viewBoxLink.DefaultClassName = "link-class";
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
+        var context = Context();
+        var output = Output();
 
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-link-init-test-link", "<script>init</script>");
+        SetupViewBoxLinkScript("init");
 
-        // Act
         viewBoxLink.Process(context, output);
 
-        // Assert
         output.Attributes["class"].Value.Should().Be("link-class");
+    }
+
+    [Fact]
+    public void Process_WhenNoClassNameIsSet_ShouldNotSetClassAttribute()
+    {
+        var viewBoxLink = CreateViewBoxLink(uri: currentPath);
+        var context = Context();
+        var output = Output();
+
+        SetupViewBoxLinkScript("init");
+
+        viewBoxLink.Process(context, output);
+
+        output.Attributes.ContainsName("class").Should().BeFalse();
     }
 
     [Fact]
     public void Process_WhenSelectedClassNameIsSetAndUriMatchesCurrentPath_ShouldSetSelectedClass()
     {
-        // Arrange
-        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-        var httpContext = new DefaultHttpContext();
-        httpContext.Request.Path = "/current/path";
-        httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
-
-        var viewBoxLink = (AlienFruit.Astra.ViewBoxLink.ViewBoxLink)Activator.CreateInstance(
-            typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink),
-            HtmlResourceRendererMock.Object,
-            httpContextAccessorMock.Object)!;
-
-        typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink).GetProperty("Id")!.SetValue(viewBoxLink, "test-link");
-        typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink).GetProperty("Uri")!.SetValue(viewBoxLink, "/current/path");
-        typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink).GetProperty("ViewBoxId")!.SetValue(viewBoxLink, "test-viewbox");
+        var viewBoxLink = CreateViewBoxLink(uri: currentPath);
         viewBoxLink.SelectedClassName = "active";
         viewBoxLink.DefaultClassName = "link";
 
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
+        var context = Context();
+        var output = Output();
 
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-link-init-test-link", "<script>init</script>");
+        SetupViewBoxLinkScript("init");
 
-        // Act
         viewBoxLink.Process(context, output);
 
-        // Assert
         output.Attributes["class"].Value.Should().Be("active");
     }
 
     [Fact]
     public void Process_WhenSelectedClassNameIsSetAndUriDoesNotMatchCurrentPath_ShouldSetDefaultClass()
     {
-        // Arrange
-        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-        var httpContext = new DefaultHttpContext();
-        httpContext.Request.Path = "/current/path";
-        httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
-
-        var viewBoxLink = (AlienFruit.Astra.ViewBoxLink.ViewBoxLink)Activator.CreateInstance(
-            typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink),
-            HtmlResourceRendererMock.Object,
-            httpContextAccessorMock.Object)!;
-
-        typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink).GetProperty("Id")!.SetValue(viewBoxLink, "test-link");
-        typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink).GetProperty("Uri")!.SetValue(viewBoxLink, "/different/path");
-        typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink).GetProperty("ViewBoxId")!.SetValue(viewBoxLink, "test-viewbox");
+        var viewBoxLink = CreateViewBoxLink(uri: "/different/path");
         viewBoxLink.SelectedClassName = "active";
         viewBoxLink.DefaultClassName = "link";
 
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
+        var context = Context();
+        var output = Output();
 
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-link-init-test-link", "<script>init</script>");
+        SetupViewBoxLinkScript("init");
 
-        // Act
         viewBoxLink.Process(context, output);
 
-        // Assert
         output.Attributes["class"].Value.Should().Be("link");
     }
 
     [Fact]
-    public void Process_WhenHttpContextIsNull_ShouldThrowInvalidOperationException()
+    public void Process_WhenSelectedClassNameIsSetAndUriMatchesCurrentPathIgnoringCase_ShouldSetSelectedClass()
     {
-        // Arrange
-        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-        httpContextAccessorMock.Setup(x => x.HttpContext).Returns((HttpContext)null);
-
-        var viewBoxLink = (AlienFruit.Astra.ViewBoxLink.ViewBoxLink)Activator.CreateInstance(
-            typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink),
-            HtmlResourceRendererMock.Object,
-            httpContextAccessorMock.Object)!;
-
-        typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink).GetProperty("Id")!.SetValue(viewBoxLink, "test-link");
-        typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink).GetProperty("Uri")!.SetValue(viewBoxLink, "/test");
-        typeof(AlienFruit.Astra.ViewBoxLink.ViewBoxLink).GetProperty("ViewBoxId")!.SetValue(viewBoxLink, "test-viewbox");
+        var viewBoxLink = CreateViewBoxLink(uri: "/Current");
         viewBoxLink.SelectedClassName = "active";
         viewBoxLink.DefaultClassName = "link";
 
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
+        var context = Context();
+        var output = Output();
 
-        // Act
+        SetupViewBoxLinkScript("init");
+
+        viewBoxLink.Process(context, output);
+
+        output.Attributes["class"].Value.Should().Be("active");
+    }
+
+    [Fact]
+    public void Process_WhenSelectedClassNameIsSetAndHttpContextIsNull_ShouldThrowInvalidOperationException()
+    {
+        var viewBoxLink = CreateViewBoxLink(
+            uri: currentPath,
+            httpContextAccessor: CreateHttpContextAccessor(null));
+        viewBoxLink.SelectedClassName = "active";
+        viewBoxLink.DefaultClassName = "link";
+
+        var context = Context();
+        var output = Output();
+
+        SetupViewBoxLinkScript("init");
+
         var act = () => viewBoxLink.Process(context, output);
 
-        // Assert
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("HttpContext is null");
     }
 
     [Fact]
-    public void Process_ShouldAddJsCodeFromTemplate()
+    public void Process_WithAbsoluteUri_ShouldSetHrefAndKeepDefaultClass()
     {
-        // Arrange
-        var viewBoxLink = CreateViewBoxLink();
-        viewBoxLink.Id = "test-link";
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
+        var viewBoxLink = CreateViewBoxLink(uri: "https://example.com/test");
+        viewBoxLink.SelectedClassName = "active";
+        viewBoxLink.DefaultClassName = "link";
 
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-link-init-test-link", "<script>init code</script>");
+        var context = Context();
+        var output = Output();
 
-        // Act
+        SetupViewBoxLinkScript("init");
+
         viewBoxLink.Process(context, output);
 
-        // Assert
-        InitScriptRendererMock.Verify(x => x.Render(It.IsAny<ViewBoxLinkSpecification>()), Times.Once);
-    }
-
-    [Fact]
-    public void Process_ShouldAppendRenderedBodyResource()
-    {
-        // Arrange
-        var viewBoxLink = CreateViewBoxLink();
-        viewBoxLink.Id = "test-link";
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
-
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-link-init-test-link", "<script>init code</script>");
-
-        // Act
-        viewBoxLink.Process(context, output);
-
-        // Assert
-        output.PostContent.GetContent().Should().Contain("<script>init code</script>");
-    }
-
-    [Fact]
-    public void Process_WithAbsoluteUri_ShouldHandleCorrectly()
-    {
-        // Arrange
-        var viewBoxLink = CreateViewBoxLink();
-        viewBoxLink.Uri = "https://example.com/test";
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
-
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-link-init-test-link", "<script>init</script>");
-
-        // Act
-        viewBoxLink.Process(context, output);
-
-        // Assert
         output.Attributes["href"].Value.Should().Be("https://example.com/test");
+        output.Attributes["class"].Value.Should().Be("link");
     }
 
     [Fact]
-    public void Process_WithRelativeUri_ShouldHandleCorrectly()
+    public void Process_WithRelativeUri_ShouldSetHref()
     {
-        // Arrange
-        var viewBoxLink = CreateViewBoxLink();
-        viewBoxLink.Uri = "../relative/path";
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
+        var viewBoxLink = CreateViewBoxLink(uri: "../relative/path");
+        var context = Context();
+        var output = Output();
 
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-link-init-test-link", "<script>init</script>");
+        SetupViewBoxLinkScript("init");
 
-        // Act
         viewBoxLink.Process(context, output);
 
-        // Assert
         output.Attributes["href"].Value.Should().Be("../relative/path");
     }
 
     [Fact]
     public void Process_WithOnClickJsFunction_ShouldIncludeInSpecification()
     {
-        // Arrange
         var viewBoxLink = CreateViewBoxLink();
         viewBoxLink.OnClickJsFunction = "customClickHandler(event)";
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
 
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-link-init-test-link", "<script>init</script>");
+        var context = Context();
+        var output = Output();
 
-        // Act
+        SetupViewBoxLinkScript("init");
+
         viewBoxLink.Process(context, output);
 
-        // Assert
-        InitScriptRendererMock.Verify(x => x.Render(It.Is<ViewBoxLinkSpecification>(spec => spec.OnClick == "customClickHandler(event)")), Times.Once);
+        InitScriptRendererMock.Verify(x => x.Render(
+            It.Is<ViewBoxLinkSpecification>(spec => spec.OnClick == "customClickHandler(event)")), Times.Once);
     }
 
     [Fact]
     public void Process_WithScrollUpFalse_ShouldIncludeInSpecification()
     {
-        // Arrange
         var viewBoxLink = CreateViewBoxLink();
         viewBoxLink.ScrollUp = false;
-        var context = CreateTagHelperContext("view-box-link");
-        var output = CreateTagHelperOutput("view-box-link");
 
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-link-init-test-link", "<script>init</script>");
+        var context = Context();
+        var output = Output();
 
-        // Act
+        SetupViewBoxLinkScript("init");
+
         viewBoxLink.Process(context, output);
 
-        // Assert
-        InitScriptRendererMock.Verify(x => x.Render(It.Is<ViewBoxLinkSpecification>(spec => spec.ScrollUp == false)), Times.Once);
+        InitScriptRendererMock.Verify(x => x.Render(
+            It.Is<ViewBoxLinkSpecification>(spec => spec.ScrollUp == false)), Times.Once);
     }
 }

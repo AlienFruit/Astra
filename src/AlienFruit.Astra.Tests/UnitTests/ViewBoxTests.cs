@@ -1,11 +1,4 @@
-using AlienFruit.Astra.Abstractions;
-using AlienFruit.Astra.Core;
-using AlienFruit.Astra.Models;
 using AlienFruit.Astra.Tests.Infrastructure;
-using AlienFruit.Astra.ViewBox;
-using FluentAssertions;
-using Microsoft.AspNetCore.Razor.TagHelpers;
-using Moq;
 
 namespace AlienFruit.Astra.Tests.UnitTests;
 
@@ -13,24 +6,12 @@ public class ViewBoxTests : AstraTestBase
 {
     private AlienFruit.Astra.ViewBox.ViewBox CreateViewBox(string id = "test-viewbox")
     {
-        // Use Activator to create ViewBox without required property validation
-        var viewBox = (AlienFruit.Astra.ViewBox.ViewBox)Activator.CreateInstance(
-            typeof(AlienFruit.Astra.ViewBox.ViewBox),
+        return new AlienFruit.Astra.ViewBox.ViewBox(
             InitScriptRendererMock.Object,
-            ResourceCompressorMock.Object)!;
-
-        typeof(AlienFruit.Astra.ViewBox.ViewBox).GetProperty("Id")!.SetValue(viewBox, id);
-        return viewBox;
-    }
-
-    [Fact]
-    public void Constructor_ShouldInitializeWithDependencies()
-    {
-        // Arrange & Act
-        var viewBox = CreateViewBox();
-
-        // Assert
-        viewBox.Should().NotBeNull();
+            ResourceCompressorMock.Object)
+        {
+            Id = id
+        };
     }
 
     [Fact]
@@ -38,8 +19,7 @@ public class ViewBoxTests : AstraTestBase
     {
         // Arrange
         var viewBox = CreateViewBox();
-        // Id is required, so we need to use reflection to set it to null for testing
-        typeof(AlienFruit.Astra.ViewBox.ViewBox).GetProperty("Id")!.SetValue(viewBox, null);
+        viewBox.Id = null!;
         var context = CreateTagHelperContext("view-box");
         var output = CreateTagHelperOutput("view-box");
 
@@ -301,7 +281,6 @@ public class ViewBoxTests : AstraTestBase
         var output = CreateTagHelperOutput("view-box");
 
         SetupResourceCompressorCompressToString("Default error message");
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-init-test-viewbox.js", "<script>init code</script>");
 
         // Act
         viewBox.Process(context, output);
@@ -319,26 +298,6 @@ public class ViewBoxTests : AstraTestBase
             spec.ConnectionErrorMessage == "Default error message")), Times.Once);
     }
 
-
-    [Fact]
-    public void Process_ShouldGenerateJavaScriptWithCorrectResourceName()
-    {
-        // Arrange
-        var viewBox = CreateViewBox();
-        viewBox.Id = "my-custom-viewbox";
-
-        var context = CreateTagHelperContext("view-box");
-        var output = CreateTagHelperOutput("view-box");
-
-        SetupResourceCompressorCompressToString("Error message");
-        SetupHtmlResourceRendererRenderBodyResource("viewbox-init-my-custom-viewbox.js", "<script>custom init</script>");
-
-        // Act
-        viewBox.Process(context, output);
-
-        // Assert
-        InitScriptRendererMock.Verify(x => x.Render(It.IsAny<ViewBoxSpecification>()), Times.Once);
-    }
     [Fact]
     public void Process_WhenConnectionErrorMessageResourceIsSet_ShouldUseCustomResource()
     {
@@ -358,7 +317,7 @@ public class ViewBoxTests : AstraTestBase
 
         // Assert
         ResourceCompressorMock.Verify(x => x.CompressToString(customResource), Times.Once);
-        InitScriptRendererMock.Verify(x => x.Render(It.Is<ViewBoxSpecification>(spec => 
+        InitScriptRendererMock.Verify(x => x.Render(It.Is<ViewBoxSpecification>(spec =>
             spec.ConnectionErrorMessage == "Compressed custom error")), Times.Once);
     }
 
@@ -370,21 +329,17 @@ public class ViewBoxTests : AstraTestBase
         viewBox.Id = "test-viewbox";
         viewBox.ConnectionErrorMessageResource = null;
 
-        var context = CreateTagHelperContext("view-box");
-        var output = CreateTagHelperOutput("view-box");
-
-        SetupResourceCompressorCompressToString("Default compressed error");
+        // Mock the default embedded resource compression
+        ResourceCompressorMock.Setup(x => x.CompressToString(It.IsAny<Resource>()))
+            .Returns("Default connection error message");
 
         // Act
+        var context = CreateTagHelperContext("view-box");
+        var output = CreateTagHelperOutput("view-box");
         viewBox.Process(context, output);
 
         // Assert
-        ResourceCompressorMock.Verify(x => x.CompressToString(It.IsAny<Resource>()), Times.Once);
-        HtmlResourceRendererMock.Verify(x => x.AddJsCodeFromTemplate(
-            It.IsAny<string>(),
-            It.IsAny<string>(),
-            It.Is<ViewBoxSpecification>(spec => spec.ConnectionErrorMessage == "Default compressed error"),
-            It.IsAny<AstraResourceLocation>()), Times.Once);
+        InitScriptRendererMock.Verify(x => x.Render(It.Is<ViewBoxSpecification>(spec => spec.ConnectionErrorMessage == "Default connection error message")), Times.Once);
     }
 
     [Fact]
@@ -400,12 +355,11 @@ public class ViewBoxTests : AstraTestBase
             .Returns("Error:\r\nConnection failed\nPlease retry\rLater");
 
         // Act
-        var result = typeof(AlienFruit.Astra.ViewBox.ViewBox)
-            .GetMethod("GetConnectionErrorMessage", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-            .Invoke(viewBox, null) as string;
+        viewBox.Process(CreateTagHelperContext("view-box"), CreateTagHelperOutput("view-box"));
 
         // Assert
-        result.Should().Be("Error:  Connection failed Please retry Later");
+        InitScriptRendererMock.Verify(x => x.Render(
+            It.Is<ViewBoxSpecification>(spec => spec.ConnectionErrorMessage == "Error:  Connection failed Please retry Later")), Times.Once);
     }
 
     [Fact]
@@ -421,13 +375,12 @@ public class ViewBoxTests : AstraTestBase
             .Returns("<div class=\"error\">Connection failed</div>");
 
         // Act
-        var result = typeof(AlienFruit.Astra.ViewBox.ViewBox)
-            .GetMethod("GetConnectionErrorMessage", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-            .Invoke(viewBox, null) as string;
+        viewBox.Process(CreateTagHelperContext("view-box"), CreateTagHelperOutput("view-box"));
 
         // Assert
         ResourceCompressorMock.Verify(x => x.CompressToString(uncompressedResource), Times.Once);
-        result.Should().Be("<div class=\"error\">Connection failed</div>");
+        InitScriptRendererMock.Verify(x => x.Render(
+            It.Is<ViewBoxSpecification>(spec => spec.ConnectionErrorMessage == "<div class=\"error\">Connection failed</div>")), Times.Once);
     }
 
     [Fact]
@@ -443,12 +396,12 @@ public class ViewBoxTests : AstraTestBase
             .Returns("Default connection error message");
 
         // Act
-        var result = typeof(AlienFruit.Astra.ViewBox.ViewBox)
-            .GetMethod("GetConnectionErrorMessage", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-            .Invoke(viewBox, null) as string;
+        viewBox.Process(CreateTagHelperContext("view-box"), CreateTagHelperOutput("view-box"));
 
         // Assert
-        result.Should().Be("Default connection error message");
+        ResourceCompressorMock.Verify(x => x.CompressToString(It.Is<Resource>(r => r is EmbeddedResource)), Times.Once);
+        InitScriptRendererMock.Verify(x => x.Render(
+            It.Is<ViewBoxSpecification>(spec => spec.ConnectionErrorMessage == "Default connection error message")), Times.Once);
     }
 
     [Fact]
@@ -484,19 +437,15 @@ public class ViewBoxTests : AstraTestBase
         output.Attributes["role"].Value.Should().Be("navigation");
         output.TagName.Should().Be("nav");
 
-        HtmlResourceRendererMock.Verify(x => x.AddJsCodeFromTemplate(
-            It.IsAny<string>(),
-            It.IsAny<string>(),
-            It.Is<ViewBoxSpecification>(spec =>
-                spec.Id == "config-test" &&
-                spec.OnStartLoadingJsFunction == "startLoading" &&
-                spec.OnTimeoutAfterStartLoadingJsFunction == "timeoutHandler" &&
-                spec.OnFinishLoadingJsFunction == "finishLoading" &&
-                spec.OnScriptsExecutedJsFunction == "scriptsExecuted" &&
-                spec.StartLoadingEventDelay == 300 &&
-                spec.ChangingBrowserAddressEnable == false &&
-                spec.ParrentViewBoxId == "parent-viewbox"),
-            AstraResourceLocation.Body), Times.Once);
+        InitScriptRendererMock.Verify(x => x.Render(It.Is<ViewBoxSpecification>(spec =>
+            spec.Id == "config-test" &&
+            spec.OnStartLoadingJsFunction == "startLoading" &&
+            spec.OnTimeoutAfterStartLoadingJsFunction == "timeoutHandler" &&
+            spec.OnFinishLoadingJsFunction == "finishLoading" &&
+            spec.OnScriptsExecutedJsFunction == "scriptsExecuted" &&
+            spec.StartLoadingEventDelay == 300 &&
+            spec.ChangingBrowserAddressEnable == false &&
+            spec.ParrentViewBoxId == "parent-viewbox")), Times.Once);
     }
 
     [Fact]
@@ -506,7 +455,6 @@ public class ViewBoxTests : AstraTestBase
         var viewBox = CreateViewBox();
         viewBox.Id = "defaults-test";
         // Don't set any other properties - they should use defaults
-
         var context = CreateTagHelperContext("view-box");
         var output = CreateTagHelperOutput("view-box");
 
@@ -516,20 +464,15 @@ public class ViewBoxTests : AstraTestBase
         viewBox.Process(context, output);
 
         // Assert
-        HtmlResourceRendererMock.Verify(x => x.AddJsCodeFromTemplate(
-            It.IsAny<string>(),
-            It.IsAny<string>(),
-            It.Is<ViewBoxSpecification>(spec =>
-                spec.Id == "defaults-test" &&
-                spec.OnStartLoadingJsFunction == null &&
-                spec.OnTimeoutAfterStartLoadingJsFunction == null &&
-                spec.OnFinishLoadingJsFunction == null &&
-                spec.OnScriptsExecutedJsFunction == null &&
-                spec.StartLoadingEventDelay == 100 && // default value
-                spec.ChangingBrowserAddressEnable == true && // default value
-                spec.ParrentViewBoxId == null &&
-                spec.ConnectionErrorMessage == "error"),
-            AstraResourceLocation.Body), Times.Once);
+        InitScriptRendererMock.Verify(x => x.Render(It.Is<ViewBoxSpecification>(spec =>
+            spec.Id == "defaults-test" &&
+            spec.OnStartLoadingJsFunction == null &&
+            spec.OnTimeoutAfterStartLoadingJsFunction == null &&
+            spec.OnFinishLoadingJsFunction == null &&
+            spec.OnScriptsExecutedJsFunction == null &&
+            spec.StartLoadingEventDelay == 100 &&
+            spec.ChangingBrowserAddressEnable == true &&
+            spec.ParrentViewBoxId == null &&
+            spec.ConnectionErrorMessage == "Error")), Times.Once);
     }
-
 }

@@ -1,7 +1,3 @@
-using AlienFruit.Astra.Abstractions;
-using AlienFruit.Astra.Models;
-using FluentAssertions;
-using System.Reflection;
 using System.Text;
 
 namespace AlienFruit.Astra.Tests.UnitTests;
@@ -36,7 +32,6 @@ public class ResourceModelsTests
 
         // Assert
         resource.Name.Should().Be(name);
-        resource.Should().NotBeNull();
     }
 
     [Fact]
@@ -52,7 +47,6 @@ public class ResourceModelsTests
         var stream = resource.GetStream();
 
         // Assert
-        stream.Should().NotBeNull();
         stream.CanRead.Should().BeTrue();
     }
 
@@ -86,7 +80,6 @@ public class ResourceModelsTests
         var content = resource.GetString();
 
         // Assert
-        content.Should().NotBeNull();
         content.Should().NotBeEmpty();
         content.Should().Contain("load-check"); // Known content from load-check.js
     }
@@ -103,7 +96,6 @@ public class ResourceModelsTests
 
         // Assert
         resource.Name.Should().Be(name);
-        resource.Should().NotBeNull();
     }
 
     [Fact]
@@ -118,7 +110,6 @@ public class ResourceModelsTests
         var stream = resource.GetStream();
 
         // Assert
-        stream.Should().NotBeNull();
         stream.Should().BeOfType<MemoryStream>();
         stream.CanRead.Should().BeTrue();
         stream.CanSeek.Should().BeTrue();
